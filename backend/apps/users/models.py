@@ -1,6 +1,7 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 
+
 class User(AbstractUser):
     # добавляем связанные имена для групп и разрешений, чтобы убрать конфликты
     groups = models.ManyToManyField(

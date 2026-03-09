@@ -6,4 +6,7 @@ urlpatterns = [
     path("api/users/", include("apps.users.urls")),
     path("api/products/", include("apps.products.urls")),
     path("", include("apps.core.urls")),  # добавили корень
+    path("api/cart/", include("apps.cart.urls")),
+    path("api/orders/", include("apps.orders.urls")),
+
 ]
