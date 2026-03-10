@@ -22,6 +22,7 @@ INSTALLED_APPS = [
     'apps.cart',
     'apps.orders',
     'apps.accounts',
+    'apps.payments',
 
     'rest_framework',
     'rest_framework.authtoken',
@@ -34,6 +35,8 @@ INSTALLED_APPS = [
     'dj_rest_auth.registration',
 
 ]
+
+SITE_ID = 1
 
 ROOT_URLCONF = "config.urls"
 
@@ -103,9 +106,16 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
-SITE_ID = 1
 
 AUTH_USER_MODEL = "users.User"
+ACCOUNT_AUTHENTICATION_METHOD = 'username'
+ACCOUNT_EMAIL_REQUIRED = True
+ACCOUNT_USERNAME_REQUIRED = True
+
+
+
+MEDIA_URL = "/media/"
+MEDIA_ROOT = BASE_DIR / "media"
 
 
 
