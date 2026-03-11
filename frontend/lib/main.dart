@@ -1,23 +1,25 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'providers/products_provider.dart';
-import 'screens/home_screen.dart';
+import 'package:ts_speed_shop/screens/splash/splash_screen.dart';
+
+import 'routes.dart';
+import 'theme.dart';
 
 void main() {
-  runApp(MyApp());
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
+  
   @override
   Widget build(BuildContext context) {
-    return MultiProvider(
-      providers: [
-        ChangeNotifierProvider(create: (_) => ProductsProvider()),
-      ],
-      child: MaterialApp(
-        title: 'TS Speed Shop',
-        home: HomeScreen(),
-      ),
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      title: 'The Flutter Way - Template',
+      theme: AppTheme.lightTheme(context),
+      initialRoute: SplashScreen.routeName,
+      routes: routes,
     );
   }
 }
