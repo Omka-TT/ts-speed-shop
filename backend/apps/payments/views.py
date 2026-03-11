@@ -1,3 +1,5 @@
+from urllib import request
+
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, IsAdminUser, AllowAny
@@ -8,12 +10,19 @@ from django.utils import timezone
 
 from .models import Payment
 from .serializers import PaymentCreateSerializer, PaymentSerializer
+
 class CreatePaymentView(APIView):
     permission_classes = [AllowAny]
 
     def post(self, request):
 
-        serializer = PaymentCreateSerializer(data=request.data)
+        if not request.user.is_authenticated:
+            return Response(
+        {"detail": "Authentication credentials were not provided."},
+        status=401
+        )
+
+        payment = serializer.save(user=request.user)
 
         if serializer.is_valid():
 
@@ -92,4 +101,9 @@ class ConfirmPaymentView(APIView):
             }
         )
     
+
+
+
+
+
 
