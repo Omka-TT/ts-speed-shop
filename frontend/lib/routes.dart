@@ -13,7 +13,8 @@ import 'screens/profile/profile_screen.dart';
 import 'screens/sign_in/sign_in_screen.dart';
 import 'screens/sign_up/sign_up_screen.dart';
 import 'screens/splash/splash_screen.dart';
-
+import 'package:flutter/material.dart';
+ 
 // We use name route
 // All our routes will be available here
 final Map<String, WidgetBuilder> routes = {

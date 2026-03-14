@@ -11,6 +11,7 @@ from django.utils import timezone
 from .models import Payment
 from .serializers import PaymentCreateSerializer, PaymentSerializer
 
+
 class CreatePaymentView(APIView):
     permission_classes = [AllowAny]
 
@@ -18,11 +19,11 @@ class CreatePaymentView(APIView):
 
         if not request.user.is_authenticated:
             return Response(
-        {"detail": "Authentication credentials were not provided."},
-        status=401
-        )
+                {"detail": "Authentication credentials were not provided."},
+                status=401
+            )
 
-        payment = serializer.save(user=request.user)
+        serializer = PaymentCreateSerializer(data=request.data)
 
         if serializer.is_valid():
 
@@ -100,6 +101,11 @@ class ConfirmPaymentView(APIView):
                 "payment_id": payment.id
             }
         )
+
+
+
+    
+
     
 
 

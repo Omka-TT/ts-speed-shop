@@ -4,8 +4,7 @@ import '../../../components/custom_surfix_icon.dart';
 import '../../../components/form_error.dart';
 import '../../../services/register_service.dart';
 import '../../login_success/login_success_screen.dart';
-
-
+import '../../../constants.dart';
 
 class SignUpForm extends StatefulWidget {
   const SignUpForm({super.key});
@@ -14,123 +13,623 @@ class SignUpForm extends StatefulWidget {
   _SignUpFormState createState() => _SignUpFormState();
 }
 
-class _SignUpFormState extends State<SignUpForm> {
-
+class _SignUpFormState extends State<SignUpForm> with SingleTickerProviderStateMixin {
   final _formKey = GlobalKey<FormState>();
-
+  
   String? username;
   String? email;
   String? password;
   String? confirmPassword;
-
+  
+  bool _isPasswordVisible = false;
+  bool _isConfirmPasswordVisible = false;
+  bool _isLoading = false;
+  
+  // Состояния ошибок для подсветки полей
+  bool _hasUsernameError = false;
+  bool _hasEmailError = false;
+  bool _hasPasswordError = false;
+  bool _hasConfirmPasswordError = false;
+  
+  String? _usernameErrorText;
+  String? _emailErrorText;
+  String? _passwordErrorText;
+  String? _confirmPasswordErrorText;
+  
   final List<String?> errors = [];
+  
+  late AnimationController _buttonController;
+  late Animation<double> _buttonScaleAnimation;
+  
+  final FocusNode _usernameFocus = FocusNode();
+  final FocusNode _emailFocus = FocusNode();
+  final FocusNode _passwordFocus = FocusNode();
+  final FocusNode _confirmPasswordFocus = FocusNode();
+
+  // Контроллеры для текста
+  final TextEditingController _usernameController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+  final TextEditingController _confirmPasswordController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    _buttonController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 150),
+    );
+    _buttonScaleAnimation = Tween<double>(begin: 1.0, end: 0.97).animate(
+      CurvedAnimation(parent: _buttonController, curve: Curves.easeInOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _buttonController.dispose();
+    _usernameFocus.dispose();
+    _emailFocus.dispose();
+    _passwordFocus.dispose();
+    _confirmPasswordFocus.dispose();
+    _usernameController.dispose();
+    _emailController.dispose();
+    _passwordController.dispose();
+    _confirmPasswordController.dispose();
+    super.dispose();
+  }
+
+  void _clearFieldErrors() {
+    setState(() {
+      _hasUsernameError = false;
+      _hasEmailError = false;
+      _hasPasswordError = false;
+      _hasConfirmPasswordError = false;
+      _usernameErrorText = null;
+      _emailErrorText = null;
+      _passwordErrorText = null;
+      _confirmPasswordErrorText = null;
+      errors.clear();
+    });
+  }
+
+  void _setFieldErrors({
+    String? usernameError, 
+    String? emailError, 
+    String? passwordError,
+    String? confirmPasswordError,
+  }) {
+    setState(() {
+      if (usernameError != null) {
+        _hasUsernameError = true;
+        _usernameErrorText = usernameError;
+        if (!errors.contains(usernameError)) {
+          errors.add(usernameError);
+        }
+      }
+      if (emailError != null) {
+        _hasEmailError = true;
+        _emailErrorText = emailError;
+        if (!errors.contains(emailError)) {
+          errors.add(emailError);
+        }
+      }
+      if (passwordError != null) {
+        _hasPasswordError = true;
+        _passwordErrorText = passwordError;
+        if (!errors.contains(passwordError)) {
+          errors.add(passwordError);
+        }
+      }
+      if (confirmPasswordError != null) {
+        _hasConfirmPasswordError = true;
+        _confirmPasswordErrorText = confirmPasswordError;
+        if (!errors.contains(confirmPasswordError)) {
+          errors.add(confirmPasswordError);
+        }
+      }
+    });
+  }
+
+  bool _validatePasswords() {
+    if (_passwordController.text != _confirmPasswordController.text) {
+      _setFieldErrors(
+        passwordError: "Passwords do not match",
+        confirmPasswordError: "Passwords do not match",
+      );
+      return false;
+    }
+    return true;
+  }
 
   @override
   Widget build(BuildContext context) {
-
     return Form(
       key: _formKey,
       child: Column(
         children: [
-
-          /// USERNAME
-          TextFormField(
-            onSaved: (newValue) => username = newValue,
-            decoration: const InputDecoration(
-              labelText: "Username",
-              hintText: "Enter username",
-              floatingLabelBehavior: FloatingLabelBehavior.always,
-            ),
-          ),
-
-          const SizedBox(height: 20),
-
-          /// EMAIL
-          TextFormField(
-            keyboardType: TextInputType.emailAddress,
-            onSaved: (newValue) => email = newValue,
-            decoration: const InputDecoration(
-              labelText: "Email",
-              hintText: "Enter email",
-              floatingLabelBehavior: FloatingLabelBehavior.always,
-              suffixIcon: CustomSurffixIcon(svgIcon: "assets/icons/Mail.svg"),
-            ),
-          ),
-
-          const SizedBox(height: 20),
-
-          /// PASSWORD
-          TextFormField(
-            obscureText: true,
-            onSaved: (newValue) => password = newValue,
-            decoration: const InputDecoration(
-              labelText: "Password",
-              hintText: "Enter password",
-              floatingLabelBehavior: FloatingLabelBehavior.always,
-              suffixIcon: CustomSurffixIcon(svgIcon: "assets/icons/Lock.svg"),
-            ),
-          ),
-
-          const SizedBox(height: 20),
-
-          /// CONFIRM PASSWORD
-          TextFormField(
-            obscureText: true,
-            onSaved: (newValue) => confirmPassword = newValue,
-            decoration: const InputDecoration(
-              labelText: "Confirm Password",
-              hintText: "Re-enter password",
-              floatingLabelBehavior: FloatingLabelBehavior.always,
-              suffixIcon: CustomSurffixIcon(svgIcon: "assets/icons/Lock.svg"),
-            ),
-          ),
-
-          FormError(errors: errors),
-
-          const SizedBox(height: 20),
-
-          ElevatedButton(
-            child: const Text("Register"),
-
-            onPressed: () async {
-
-              if (_formKey.currentState!.validate()) {
-
-                _formKey.currentState!.save();
-
-                RegisterService register = RegisterService();
-
-                bool success = await register.register(
-                  username!,
-                  email!,
-                  password!,
-                );
-
-                if(success){
-
-                  Navigator.pushNamed(
-                    context,
-                    LoginSuccessScreen.routeName,
-                  );
-
-                }else{
-
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text("Registration failed"),
-                    ),
-                  );
-
+          // Username field
+          _buildAnimatedField(
+            index: 0,
+            child: _buildTextField(
+              hint: "Username",
+              icon: Icons.person_outline,
+              controller: _usernameController,
+              focusNode: _usernameFocus,
+              hasError: _hasUsernameError,
+              errorText: _usernameErrorText,
+              onSaved: (newValue) => username = newValue,
+              onChanged: (value) {
+                if (_hasUsernameError) {
+                  setState(() {
+                    _hasUsernameError = false;
+                    _usernameErrorText = null;
+                  });
                 }
+              },
+            ),
+          ),
+          const SizedBox(height: 16),
+          
+          // Email field
+          _buildAnimatedField(
+            index: 1,
+            child: _buildTextField(
+              hint: "Email",
+              icon: Icons.email_outlined,
+              controller: _emailController,
+              focusNode: _emailFocus,
+              keyboardType: TextInputType.emailAddress,
+              hasError: _hasEmailError,
+              errorText: _emailErrorText,
+              onSaved: (newValue) => email = newValue,
+              onChanged: (value) {
+                if (_hasEmailError) {
+                  setState(() {
+                    _hasEmailError = false;
+                    _emailErrorText = null;
+                  });
+                }
+              },
+            ),
+          ),
+          const SizedBox(height: 16),
+          
+          // Password field
+          _buildAnimatedField(
+            index: 2,
+            child: _buildTextField(
+              hint: "Password",
+              icon: Icons.lock_outline,
+              controller: _passwordController,
+              focusNode: _passwordFocus,
+              isPassword: true,
+              hasError: _hasPasswordError,
+              errorText: _passwordErrorText,
+              onSaved: (newValue) => password = newValue,
+              onChanged: (value) {
+                if (_hasPasswordError) {
+                  setState(() {
+                    _hasPasswordError = false;
+                    _passwordErrorText = null;
+                  });
+                }
+                // Сбрасываем ошибку подтверждения пароля при изменении пароля
+                if (_hasConfirmPasswordError) {
+                  setState(() {
+                    _hasConfirmPasswordError = false;
+                    _confirmPasswordErrorText = null;
+                  });
+                }
+              },
+            ),
+          ),
+          const SizedBox(height: 16),
 
-              }
-
-            },
-
+          // Confirm Password field
+          _buildAnimatedField(
+            index: 3,
+            child: _buildTextField(
+              hint: "Confirm Password",
+              icon: Icons.lock_outline,
+              controller: _confirmPasswordController,
+              focusNode: _confirmPasswordFocus,
+              isPassword: true,
+              isConfirmPassword: true,
+              hasError: _hasConfirmPasswordError,
+              errorText: _confirmPasswordErrorText,
+              onSaved: (newValue) => confirmPassword = newValue,
+              onChanged: (value) {
+                if (_hasConfirmPasswordError) {
+                  setState(() {
+                    _hasConfirmPasswordError = false;
+                    _confirmPasswordErrorText = null;
+                  });
+                }
+              },
+            ),
+          ),
+          
+          const SizedBox(height: 20),
+          
+          // Error messages
+          AnimatedSwitcher(
+            duration: const Duration(milliseconds: 300),
+            child: errors.isEmpty 
+                ? const SizedBox.shrink()
+                : TweenAnimationBuilder(
+                    tween: Tween<double>(begin: 0, end: 1),
+                    duration: const Duration(milliseconds: 300),
+                    builder: (context, double value, child) {
+                      return Opacity(
+                        opacity: value,
+                        child: Transform.scale(
+                          scale: 0.9 + (0.1 * value),
+                          child: Container(
+                            margin: const EdgeInsets.only(top: 10),
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: Colors.red.shade50,
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: Colors.red.shade200),
+                            ),
+                            child: FormError(errors: errors),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
           ),
 
+          const SizedBox(height: 20),
+
+          // Register button
+          _buildAnimatedField(
+            index: 4,
+            child: GestureDetector(
+              onTapDown: (_) => _buttonController.forward(),
+              onTapUp: (_) => _buttonController.reverse(),
+              onTapCancel: () => _buttonController.reverse(),
+              child: ScaleTransition(
+                scale: _buttonScaleAnimation,
+                child: Container(
+                  width: double.infinity,
+                  height: 56,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(16),
+                    gradient: LinearGradient(
+                      colors: [_hasAnyError() ? Colors.grey : kPrimaryColor, 
+                               _hasAnyError() ? Colors.grey.shade400 : kPrimaryColor.withOpacity(0.7)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: (_hasAnyError() ? Colors.grey : kPrimaryColor).withOpacity(0.3),
+                        blurRadius: 15,
+                        offset: const Offset(0, 8),
+                      ),
+                    ],
+                  ),
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.transparent,
+                      shadowColor: Colors.transparent,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                    ),
+                    onPressed: _isLoading ? null : _handleRegister,
+                    child: _isLoading
+                        ? const SizedBox(
+                            height: 24,
+                            width: 24,
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 2,
+                            ),
+                          )
+                        : Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: const [
+                              Text(
+                                "Register",
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  letterSpacing: 1,
+                                ),
+                              ),
+                              SizedBox(width: 8),
+                              Icon(Icons.person_add, size: 20),
+                            ],
+                          ),
+                  ),
+                ),
+              ),
+            ),
+          ),
         ],
       ),
     );
   }
+
+  bool _hasAnyError() {
+    return _hasUsernameError || _hasEmailError || _hasPasswordError || _hasConfirmPasswordError;
+  }
+
+  Widget _buildAnimatedField({required int index, required Widget child}) {
+    return TweenAnimationBuilder(
+      tween: Tween<double>(begin: 0, end: 1),
+      duration: Duration(milliseconds: 400 + (index * 80)),
+      curve: Curves.easeOutQuad,
+      builder: (context, double value, child) {
+        return Opacity(
+          opacity: value,
+          child: Transform.translate(
+            offset: Offset(30 * (1 - value), 0),
+            child: child,
+          ),
+        );
+      },
+      child: child,
+    );
+  }
+
+  Widget _buildTextField({
+    required String hint,
+    required IconData icon,
+    required TextEditingController controller,
+    required Function(String?) onSaved,
+    Function(String)? onChanged,
+    FocusNode? focusNode,
+    TextInputType keyboardType = TextInputType.text,
+    bool isPassword = false,
+    bool isConfirmPassword = false,
+    bool hasError = false,
+    String? errorText,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Label
+        Padding(
+          padding: const EdgeInsets.only(left: 4, bottom: 4),
+          child: Text(
+            hint,
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+              color: hasError ? Colors.red.shade400 : Colors.grey.shade700,
+            ),
+          ),
+        ),
+        // Text field
+        Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16),
+            color: Colors.grey.shade50,
+            border: Border.all(
+              color: Colors.transparent,
+              width: 1,
+            ),
+          ),
+          child: TextFormField(
+            controller: controller,
+            focusNode: focusNode,
+            keyboardType: keyboardType,
+            obscureText: isPassword 
+                ? (isConfirmPassword ? !_isConfirmPasswordVisible : !_isPasswordVisible)
+                : false,
+            onSaved: onSaved,
+            onChanged: (value) {
+              if (onChanged != null) {
+                onChanged(value);
+              }
+            },
+            style: TextStyle(
+              color: hasError ? Colors.red.shade400 : Colors.black,
+            ),
+            decoration: InputDecoration(
+              hintText: "Enter $hint",
+              hintStyle: TextStyle(
+                color: hasError ? Colors.red.shade200 : Colors.grey.shade400,
+              ),
+              floatingLabelBehavior: FloatingLabelBehavior.never,
+              prefixIcon: Icon(
+                icon, 
+                color: hasError ? Colors.red.shade400 : kPrimaryColor, 
+                size: 20
+              ),
+              suffixIcon: isPassword
+                  ? IconButton(
+                      icon: Icon(
+                        isConfirmPassword
+                            ? (_isConfirmPasswordVisible ? Icons.visibility_off : Icons.visibility)
+                            : (_isPasswordVisible ? Icons.visibility_off : Icons.visibility),
+                        color: hasError ? Colors.red.shade400 : Colors.grey,
+                        size: 20,
+                      ),
+                      onPressed: () {
+                        setState(() {
+                          if (isConfirmPassword) {
+                            _isConfirmPasswordVisible = !_isConfirmPasswordVisible;
+                          } else {
+                            _isPasswordVisible = !_isPasswordVisible;
+                          }
+                        });
+                      },
+                    )
+                  : null,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(16),
+                borderSide: BorderSide.none,
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(16),
+                borderSide: BorderSide.none,
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(16),
+                borderSide: BorderSide.none,
+              ),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+            ),
+          ),
+        ),
+        // Error text
+        if (errorText != null)
+          Padding(
+            padding: const EdgeInsets.only(left: 16, top: 4),
+            child: Text(
+              errorText,
+              style: TextStyle(
+                color: Colors.red.shade400,
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
+  Future<void> _handleRegister() async {
+    if (_formKey.currentState!.validate()) {
+      _formKey.currentState!.save();
+      
+      // Очищаем предыдущие ошибки
+      _clearFieldErrors();
+      
+      // Проверяем совпадение паролей
+      if (!_validatePasswords()) {
+        return;
+      }
+      
+      setState(() {
+        _isLoading = true;
+      });
+
+      RegisterService register = RegisterService();
+      
+      try {
+        final result = await register.register(
+          _usernameController.text,
+          _emailController.text,
+          _passwordController.text,
+        );
+
+        setState(() {
+          _isLoading = false;
+        });
+
+        print('Registration result: $result');
+
+        if (result['success'] == true) {
+          _showSuccessDialog();
+        } else {
+          // Обработка ошибок
+          String message = result['message'] ?? 'Registration failed';
+          Map<String, String> fieldErrors = result['fieldErrors'] ?? {};
+          bool userExists = result['userExists'] == true;
+          
+          print('Registration error: $message, userExists: $userExists, fieldErrors: $fieldErrors');
+          
+          if (userExists) {
+            // Пользователь уже существует
+            _setFieldErrors(
+              usernameError: fieldErrors['username'] ?? "Username already taken",
+              emailError: fieldErrors['email'] ?? "Email already registered",
+            );
+            _showErrorSnackBar(
+              "You are already registered. Please login instead.",
+              showLogin: true,
+            );
+          } else {
+            // Другие ошибки валидации
+            if (fieldErrors.containsKey('username')) {
+              _setFieldErrors(usernameError: fieldErrors['username']);
+            }
+            if (fieldErrors.containsKey('email')) {
+              _setFieldErrors(emailError: fieldErrors['email']);
+            }
+            if (fieldErrors.containsKey('password')) {
+              _setFieldErrors(passwordError: fieldErrors['password']);
+            }
+            
+            if (fieldErrors.isEmpty) {
+              _setFieldErrors(
+                usernameError: message,
+                emailError: message,
+                passwordError: message,
+              );
+            }
+            
+            _showErrorSnackBar(message);
+          }
+        }
+      } catch (e) {
+        setState(() {
+          _isLoading = false;
+        });
+        
+        print('Unexpected error in register: $e');
+        _setFieldErrors(
+          usernameError: "Registration failed",
+          emailError: "Registration failed",
+          passwordError: "Registration failed",
+        );
+        _showErrorSnackBar("Registration failed. Please try again.");
+      }
+    }
+  }
+
+  void _showSuccessDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Text("Welcome!"),
+        content: const Text("Your account has been created successfully."),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              Navigator.pushNamed(context, LoginSuccessScreen.routeName);
+            },
+            child: const Text("Continue"),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showErrorSnackBar(String message, {bool showLogin = false}) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            const Icon(Icons.error_outline, color: Colors.white),
+            const SizedBox(width: 8),
+            Expanded(child: Text(message)),
+          ],
+        ),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        backgroundColor: Colors.red.shade400,
+        margin: const EdgeInsets.all(16),
+        duration: const Duration(seconds: 4),
+        action: showLogin
+            ? SnackBarAction(
+                label: "Login",
+                textColor: Colors.white,
+                onPressed: () {
+                  Navigator.pushNamed(context, "/sign_in");
+                },
+              )
+            : null,
+      ),
+    );
+  }
 }
+
+

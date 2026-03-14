@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'components/categories.dart';
 import 'components/discount_banner.dart';
 import 'components/home_header.dart';
-import 'components/popular_product.dart';
+// import 'components/popular_product.dart';
 import 'components/special_offers.dart';
 
 class HomeScreen extends StatelessWidget {
@@ -23,7 +23,7 @@ class HomeScreen extends StatelessWidget {
               Categories(),
               SpecialOffers(),
               SizedBox(height: 20),
-              PopularProducts(),
+              // PopularProducts(),
               SizedBox(height: 20),
             ],
           ),
