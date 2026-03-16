@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
-import '../../models/Cart.dart';
+import 'package:provider/provider.dart';
+import '../../models/Cart.dart'; // Добавлен импорт
+import '../../providers/cart_provider.dart';
 import 'components/cart_card.dart';
 import 'components/check_out_card.dart';
 
@@ -14,46 +16,70 @@ class CartScreen extends StatefulWidget {
 
 class _CartScreenState extends State<CartScreen> {
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<CartProvider>().loadCart();
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Column(
-          children: [
-            const Text(
-              "Your Cart",
-              style: TextStyle(color: Colors.black),
-            ),
-            Text(
-              "${demoCarts.length} items",
-              style: Theme.of(context).textTheme.bodySmall,
-            ),
-          ],
+        title: Consumer<CartProvider>(
+          builder: (context, cartProvider, child) {
+            return Column(
+              children: [
+                const Text(
+                  "Your Cart",
+                  style: TextStyle(color: Colors.black),
+                ),
+                Text(
+                  "${cartProvider.cartItems.length} items",
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+              ],
+            );
+          },
         ),
       ),
-      body: demoCarts.isEmpty
-          ? _buildEmptyCart()
-          : Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: ListView.builder(
-                itemCount: demoCarts.length,
-                itemBuilder: (context, index) => Padding(
+      body: Consumer<CartProvider>(
+        builder: (context, cartProvider, child) {
+          if (cartProvider.isLoading) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          if (cartProvider.cartItems.isEmpty) {
+            return _buildEmptyCart();
+          }
+
+          return Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: ListView.builder(
+              itemCount: cartProvider.cartItems.length,
+              itemBuilder: (context, index) {
+                final cartItem = cartProvider.cartItems[index];
+                return Padding(
                   padding: const EdgeInsets.symmetric(vertical: 10),
                   child: Dismissible(
-                    key: Key(demoCarts[index].product.id.toString()),
+                    key: Key(cartItem.product.id.toString()),
                     direction: DismissDirection.endToStart,
-                    onDismissed: (direction) {
-                      setState(() {
-                        demoCarts.removeAt(index);
-                      });
-                      
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text('${demoCarts[index].product.name} removed from cart'),
-                          behavior: SnackBarBehavior.floating,
-                          backgroundColor: Colors.red,
-                          duration: const Duration(seconds: 1),
-                        ),
+                    onDismissed: (direction) async {
+                      final success = await cartProvider.removeFromCart(
+                        cartItem.product.id,
                       );
+                      
+                      if (success && mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('${cartItem.product.name} removed from cart'),
+                            behavior: SnackBarBehavior.floating,
+                            backgroundColor: Colors.red,
+                            duration: const Duration(seconds: 1),
+                          ),
+                        );
+                      }
                     },
                     background: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -68,12 +94,22 @@ class _CartScreenState extends State<CartScreen> {
                         ],
                       ),
                     ),
-                    child: CartCard(cart: demoCarts[index]),
+                    child: CartCard(cart: cartItem),
                   ),
-                ),
-              ),
+                );
+              },
             ),
-      bottomNavigationBar: demoCarts.isEmpty ? null : const CheckoutCard(),
+          );
+        },
+      ),
+      bottomNavigationBar: Consumer<CartProvider>(
+        builder: (context, cartProvider, child) {
+          if (cartProvider.cartItems.isEmpty) {
+            return const SizedBox.shrink(); // Исправлено: возвращаем Widget, а не null
+          }
+          return CheckoutCard(totalPrice: cartProvider.totalPrice);
+        },
+      ),
     );
   }
 
@@ -120,5 +156,4 @@ class _CartScreenState extends State<CartScreen> {
     );
   }
 }
-
 

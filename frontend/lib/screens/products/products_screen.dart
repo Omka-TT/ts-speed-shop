@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../components/product_card.dart';
-import '../../models/Product.dart';
-import '../../models/Cart.dart';
-import '../../services/product_service.dart';
+import '../../providers/product_provider.dart';
+import '../../providers/cart_provider.dart';
 import '../details/details_screen.dart';
+import '../../models/Product.dart';
 
 class ProductsScreen extends StatefulWidget {
   const ProductsScreen({super.key});
@@ -15,51 +16,11 @@ class ProductsScreen extends StatefulWidget {
 }
 
 class _ProductsScreenState extends State<ProductsScreen> {
-  final ProductService _productService = ProductService();
-  List<Product> _products = [];
-  bool _isLoading = true;
-  String? _errorMessage;
-
   @override
   void initState() {
     super.initState();
-    _loadProducts();
-  }
-
-  Future<void> _loadProducts() async {
-    setState(() {
-      _isLoading = true;
-      _errorMessage = null;
-    });
-
-    try {
-      final products = await _productService.getProducts();
-      
-      setState(() {
-        _products = products;
-        _isLoading = false;
-      });
-      
-      // Обновляем demoProducts для совместимости с другими экранами
-      initializeDemoProducts(products);
-      
-    } catch (e) {
-      setState(() {
-        _errorMessage = 'Failed to load products. Please try again.';
-        _isLoading = false;
-      });
-    }
-  }
-
-  void _toggleFavorite(Product product) {
-    setState(() {
-      final index = _products.indexWhere((p) => p.id == product.id);
-      if (index != -1) {
-        _products[index] = _products[index].copyWith(
-          isFavourite: !_products[index].isFavourite,
-        );
-        toggleFavorite(product.id);
-      }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<ProductProvider>().loadProducts();
     });
   }
 
@@ -75,70 +36,87 @@ class _ProductsScreenState extends State<ProductsScreen> {
         backgroundColor: Colors.transparent,
         foregroundColor: Colors.black,
         actions: [
-          Stack(
-            clipBehavior: Clip.none,
-            children: [
-              IconButton(
-                icon: const Icon(Icons.shopping_cart_outlined, size: 22),
-                onPressed: () {
-                  Navigator.pushNamed(context, '/cart');
-                },
-              ),
-              if (demoCarts.isNotEmpty)
-                Positioned(
-                  right: 2,
-                  top: 2,
-                  child: Container(
-                    padding: const EdgeInsets.all(2),
-                    decoration: const BoxDecoration(
-                      color: Colors.red,
-                      shape: BoxShape.circle,
-                    ),
-                    constraints: const BoxConstraints(
-                      minWidth: 16,
-                      minHeight: 16,
-                    ),
-                    child: Text(
-                      '${getCartItemCount()}',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 9,
-                        fontWeight: FontWeight.bold,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
+          Consumer<CartProvider>(
+            builder: (context, cartProvider, child) {
+              return Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.shopping_cart_outlined, size: 22),
+                    onPressed: () {
+                      Navigator.pushNamed(context, '/cart');
+                    },
                   ),
-                ),
-            ],
+                  if (cartProvider.totalItems > 0)
+                    Positioned(
+                      right: 2,
+                      top: 2,
+                      child: Container(
+                        padding: const EdgeInsets.all(2),
+                        decoration: const BoxDecoration(
+                          color: Colors.red,
+                          shape: BoxShape.circle,
+                        ),
+                        constraints: const BoxConstraints(
+                          minWidth: 16,
+                          minHeight: 16,
+                        ),
+                        child: Text(
+                          '${cartProvider.totalItems}',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 9,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    ),
+                ],
+              );
+            },
           ),
           IconButton(
             icon: const Icon(Icons.refresh, size: 20),
-            onPressed: _loadProducts,
+            onPressed: () {
+              context.read<ProductProvider>().loadProducts();
+              context.read<CartProvider>().loadCart();
+            },
           ),
         ],
       ),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(12),
-          child: _isLoading
-              ? const Center(child: CircularProgressIndicator())
-              : _errorMessage != null
-                  ? _buildErrorWidget()
-                  : _products.isEmpty
-                      ? _buildEmptyWidget()
-                      : RefreshIndicator(
-                          onRefresh: _loadProducts,
-                          child: _buildProductsGrid(),
-                        ),
+          child: Consumer<ProductProvider>(
+            builder: (context, productProvider, child) {
+              if (productProvider.isLoading) {
+                return const Center(child: CircularProgressIndicator());
+              }
+              
+              if (productProvider.error != null) {
+                return _buildErrorWidget(productProvider.error!);
+              }
+              
+              if (productProvider.products.isEmpty) {
+                return _buildEmptyWidget();
+              }
+              
+              return RefreshIndicator(
+                onRefresh: () => productProvider.loadProducts(),
+                child: _buildProductsGrid(productProvider.products),
+              );
+            },
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildProductsGrid() {
+  Widget _buildProductsGrid(List<Product> products) {
     return GridView.builder(
       physics: const AlwaysScrollableScrollPhysics(),
-      itemCount: _products.length,
+      itemCount: products.length,
       gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
         maxCrossAxisExtent: 180,
         childAspectRatio: 0.7,
@@ -147,23 +125,23 @@ class _ProductsScreenState extends State<ProductsScreen> {
       ),
       itemBuilder: (context, index) {
         return ProductCard(
-          product: _products[index],
+          product: products[index],
           onPress: () {
             Navigator.pushNamed(
               context,
               DetailsScreen.routeName,
-              arguments: ProductDetailsArguments(product: _products[index]),
-            ).then((_) => _loadProducts());
+              arguments: ProductDetailsArguments(product: products[index]),
+            );
           },
           onFavoriteToggle: () {
-            _toggleFavorite(_products[index]);
+            context.read<ProductProvider>().toggleFavorite(products[index].id);
           },
         );
       },
     );
   }
 
-  Widget _buildErrorWidget() {
+  Widget _buildErrorWidget(String error) {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -175,13 +153,15 @@ class _ProductsScreenState extends State<ProductsScreen> {
           ),
           const SizedBox(height: 12),
           Text(
-            _errorMessage!,
+            error,
             style: const TextStyle(fontSize: 14, color: Colors.grey),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 16),
           ElevatedButton(
-            onPressed: _loadProducts,
+            onPressed: () {
+              context.read<ProductProvider>().loadProducts();
+            },
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.blue,
               foregroundColor: Colors.white,

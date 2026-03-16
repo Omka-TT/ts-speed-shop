@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../../models/Product.dart';
-import '../../../models/Cart.dart';
+import '../../../providers/cart_provider.dart';
 
 class AddToCart extends StatelessWidget {
   final Product product;
@@ -18,15 +19,19 @@ class AddToCart extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: ElevatedButton(
         onPressed: product.available
-            ? () {
-                addToCart(product, quantity);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('${product.name} added to cart'),
-                    behavior: SnackBarBehavior.floating,
-                    backgroundColor: Colors.green,
-                  ),
-                );
+            ? () async {
+                final cartProvider = context.read<CartProvider>();
+                final success = await cartProvider.addToCart(product, quantity);
+                
+                if (success && context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('${product.name} added to cart'),
+                      behavior: SnackBarBehavior.floating,
+                      backgroundColor: Colors.green,
+                    ),
+                  );
+                }
               }
             : null,
         style: ElevatedButton.styleFrom(
@@ -40,3 +45,4 @@ class AddToCart extends StatelessWidget {
     );
   }
 }
+
