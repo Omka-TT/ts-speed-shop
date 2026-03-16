@@ -11,9 +11,11 @@ class FormError extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final visibleErrors = errors.whereType<String>().toList();
+
     return Column(
-      children: List.generate(
-          errors.length, (index) => formErrorText(error: errors[index]!)),
+      children:
+          visibleErrors.map((error) => formErrorText(error: error)).toList(),
     );
   }
 
