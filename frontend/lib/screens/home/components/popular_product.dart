@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+
 import '../../../components/product_card.dart';
-import '../../../models/Product.dart'; // Добавлен импорт
-import '../../../providers/product_provider.dart';
-import '../../../providers/cart_provider.dart';
+import '../../../models/Product.dart';
 import '../../details/details_screen.dart';
 import '../../products/products_screen.dart';
 import 'section_title.dart';
@@ -13,60 +11,50 @@ class PopularProducts extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<ProductProvider>(
-      builder: (context, productProvider, child) {
-        final popularProducts = productProvider.popularProducts;
-        
-        if (popularProducts.isEmpty) {
-          return const SizedBox.shrink();
-        }
-
-        return Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: SectionTitle(
-                title: "Popular Products",
-                press: () {
-                  Navigator.pushNamed(context, ProductsScreen.routeName);
-                },
-              ),
-            ),
-            const SizedBox(height: 10),
-            SizedBox(
-              height: 220,
-              child: ListView.builder(
-                scrollDirection: Axis.horizontal,
-                itemCount: popularProducts.length,
-                itemBuilder: (context, index) {
-                  return Padding(
-                    padding: EdgeInsets.only(
-                      left: index == 0 ? 20 : 10,
-                      right: index == popularProducts.length - 1 ? 20 : 0,
-                    ),
-                    child: ProductCard(
-                      product: popularProducts[index],
-                      onPress: () {
-                        Navigator.pushNamed(
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: SectionTitle(
+            title: "Popular Products",
+            press: () {
+              Navigator.pushNamed(context, ProductsScreen.routeName);
+            },
+          ),
+        ),
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            children: [
+              ...List.generate(
+                demoProducts.length,
+                (index) {
+                  if (demoProducts[index].isPopular) {
+                    return Padding(
+                      padding: const EdgeInsets.only(left: 20),
+                      child: ProductCard(
+                        product: demoProducts[index],
+                        onPress: () => Navigator.pushNamed(
                           context,
                           DetailsScreen.routeName,
                           arguments: ProductDetailsArguments(
-                            product: popularProducts[index],
-                          ),
-                        );
-                      },
-                      onFavoriteToggle: () {
-                        productProvider.toggleFavorite(popularProducts[index].id);
-                      },
-                    ),
-                  );
+                              product: demoProducts[index]),
+                        ),
+                      ),
+                    );
+                  }
+
+                  return const SizedBox
+                      .shrink(); // here by default width and height is 0
                 },
               ),
-            ),
-          ],
-        );
-      },
+              const SizedBox(width: 20),
+            ],
+          ),
+        )
+      ],
     );
   }
 }
+
 

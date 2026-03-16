@@ -1,168 +1,84 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+
 import '../constants.dart';
 import '../models/Product.dart';
 
-class ProductCard extends StatefulWidget {
+class ProductCard extends StatelessWidget {
   const ProductCard({
     Key? key,
     this.width = 140,
     this.aspectRetio = 1.02,
     required this.product,
     required this.onPress,
-    required this.onFavoriteToggle,
   }) : super(key: key);
 
   final double width, aspectRetio;
   final Product product;
   final VoidCallback onPress;
-  final VoidCallback onFavoriteToggle;
-
-  @override
-  State<ProductCard> createState() => _ProductCardState();
-}
-
-class _ProductCardState extends State<ProductCard> {
-  bool _isHovered = false;
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: widget.onPress,
-      child: Container(
-        width: widget.width,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(16),
-          color: Colors.white,
-          boxShadow: _isHovered
-              ? [
-                  BoxShadow(
-                    color: Colors.grey.withOpacity(0.2),
-                    blurRadius: 10,
-                    offset: const Offset(0, 5),
-                  ),
-                ]
-              : null,
-        ),
+    return SizedBox(
+      width: width,
+      child: GestureDetector(
+        onTap: onPress,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
           children: [
-            // Image
             AspectRatio(
-              aspectRatio: widget.aspectRetio,
+              aspectRatio: 1.02,
               child: Container(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  color: Colors.grey.shade50,
-                  borderRadius: const BorderRadius.vertical(
-                    top: Radius.circular(16),
-                  ),
+                  color: kSecondaryColor.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
                 ),
-                child: Hero(
-                  tag: 'product_image_${widget.product.id}',
-                  child: Image.asset(
-                    widget.product.images.isNotEmpty
-                        ? widget.product.images[0]
-                        : "assets/images/placeholder.png",
-                    fit: BoxFit.contain,
-                    errorBuilder: (context, error, stackTrace) {
-                      return Image.asset(
-                        "assets/images/placeholder.png",
-                        fit: BoxFit.contain,
-                      );
-                    },
-                  ),
-                ),
+                child: Image.asset(product.images[0]),
               ),
             ),
-            
-            // Product info
-            Padding(
-              padding: const EdgeInsets.all(12),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    widget.product.name,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w600,
-                      fontSize: 14,
+            const SizedBox(height: 8),
+            Text(
+              product.title,
+              style: Theme.of(context).textTheme.bodyMedium,
+              maxLines: 2,
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  "\$${product.price}",
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: kPrimaryColor,
+                  ),
+                ),
+                InkWell(
+                  borderRadius: BorderRadius.circular(50),
+                  onTap: () {},
+                  child: Container(
+                    padding: const EdgeInsets.all(6),
+                    height: 24,
+                    width: 24,
+                    decoration: BoxDecoration(
+                      color: product.isFavourite
+                          ? kPrimaryColor.withOpacity(0.15)
+                          : kSecondaryColor.withOpacity(0.1),
+                      shape: BoxShape.circle,
                     ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+                    child: SvgPicture.asset(
+                      "assets/icons/Heart Icon_2.svg",
+                      colorFilter: ColorFilter.mode(
+                          product.isFavourite
+                              ? const Color(0xFFFF4848)
+                              : const Color(0xFFDBDEE4),
+                          BlendMode.srcIn),
+                    ),
                   ),
-                  const SizedBox(height: 8),
-                  
-                  // Price and favourite row
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        widget.product.formattedPrice,
-                        style: const TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
-                          color: kPrimaryColor,
-                        ),
-                      ),
-                      
-                      // Favourite button
-                      GestureDetector(
-                        onTap: widget.onFavoriteToggle,
-                        child: Container(
-                          padding: const EdgeInsets.all(4),
-                          height: 28,
-                          width: 28,
-                          decoration: BoxDecoration(
-                            color: widget.product.isFavourite
-                                ? Colors.red.withOpacity(0.1)
-                                : Colors.grey.withOpacity(0.1),
-                            shape: BoxShape.circle,
-                          ),
-                          child: Icon(
-                            widget.product.isFavourite
-                                ? Icons.favorite
-                                : Icons.favorite_border,
-                            color: widget.product.isFavourite
-                                ? Colors.red
-                                : Colors.grey,
-                            size: 16,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  
-                  const SizedBox(height: 4),
-                  
-                  // Rating
-                  Row(
-                    children: [
-                      ...List.generate(5, (index) {
-                        return Icon(
-                          index < widget.product.rating.floor()
-                              ? Icons.star
-                              : (index < widget.product.rating
-                                  ? Icons.star_half
-                                  : Icons.star_border),
-                          color: Colors.amber,
-                          size: 12,
-                        );
-                      }),
-                      const SizedBox(width: 4),
-                      Text(
-                        widget.product.rating.toStringAsFixed(1),
-                        style: const TextStyle(
-                          fontSize: 10,
-                          color: Colors.grey,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
+                ),
+              ],
+            )
           ],
         ),
       ),
