@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'routes.dart';
 import 'screens/splash/splash_screen.dart';
+import 'services/favorites_service.dart';
 import 'constants.dart';
 
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await FavoritesService.instance.init();
   runApp(const MyApp());
 }
 

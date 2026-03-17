@@ -1,4 +1,7 @@
 import 'package:dio/dio.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+const _kAuthTokenKey = 'auth_token';
 
 class AuthService {
   final Dio dio = Dio(
@@ -28,10 +31,20 @@ class AuthService {
       print('Login Response Data: ${response.data}');
 
       if (response.statusCode == 200) {
+        final token = (response.data is Map && response.data['token'] != null)
+            ? response.data['token'].toString()
+            : null;
+
+        if (token != null && token.isNotEmpty) {
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.setString(_kAuthTokenKey, token);
+        }
+
         return {
           'success': true,
           'message': 'Login successful',
           'data': response.data,
+          'token': token,
         };
       } else if (response.statusCode == 400) {
         // Обработка ошибки 400 (неверные данные или пользователь не найден)
@@ -153,4 +166,3 @@ class AuthService {
     }
   }
 }
-
