@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 
 import '../constants.dart';
 import '../models/Product.dart';
+import 'package:provider/provider.dart';
+import '../providers/favorites_provider.dart';
 
 class ProductPage extends StatefulWidget {
   const ProductPage({
@@ -16,24 +18,20 @@ class ProductPage extends StatefulWidget {
 }
 
 class _ProductPageState extends State<ProductPage> {
-  bool _liked = false;
   bool _expanded = false;
+  bool _heartPressed = false;
 
   Widget _buildImage() {
-    if (widget.product.id == 1) {
-      return Image.asset(
-        'assets/images/capcut-logo.jpg',
-        fit: BoxFit.cover,
-        width: double.infinity,
-        height: double.infinity,
-        errorBuilder: (context, error, stackTrace) => const Center(
-          child: Icon(Icons.broken_image, size: 60, color: Colors.white70),
-        ),
-      );
-    }
+    final imagePath = widget.product.primaryImage;
 
-    return const Center(
-      child: Icon(Icons.image_outlined, size: 80, color: Colors.white70),
+    return Image.asset(
+      imagePath,
+      fit: BoxFit.cover,
+      width: double.infinity,
+      height: double.infinity,
+      errorBuilder: (context, error, stackTrace) => const Center(
+        child: Icon(Icons.broken_image, size: 60, color: Colors.white70),
+      ),
     );
   }
 
@@ -79,31 +77,43 @@ class _ProductPageState extends State<ProductPage> {
                       Positioned(
                         top: 14,
                         right: 14,
-                        child: GestureDetector(
-                          onTap: () => setState(() => _liked = !_liked),
-                          child: AnimatedScale(
-                            scale: _liked ? 1.12 : 1.0,
-                            duration: const Duration(milliseconds: 140),
-                            child: Container(
-                              padding: const EdgeInsets.all(8),
-                              decoration: BoxDecoration(
-                                color: Colors.white.withAlpha(220),
-                                shape: BoxShape.circle,
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withAlpha(18),
-                                    blurRadius: 8,
-                                    offset: const Offset(0, 4),
-                                  )
-                                ],
+                        child: Consumer<FavoritesProvider>(
+                          builder: (context, favoritesProvider, _) {
+                            final isFavorite =
+                                favoritesProvider.isFavorite(widget.product);
+
+                            return GestureDetector(
+                              onTapDown: (_) => setState(() => _heartPressed = true),
+                              onTapUp: (_) {
+                                setState(() => _heartPressed = false);
+                                favoritesProvider.toggleFavorite(widget.product);
+                              },
+                              onTapCancel: () => setState(() => _heartPressed = false),
+                              child: AnimatedScale(
+                                scale: _heartPressed ? 1.12 : 1.0,
+                                duration: const Duration(milliseconds: 140),
+                                child: Container(
+                                  padding: const EdgeInsets.all(8),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white.withAlpha(220),
+                                    shape: BoxShape.circle,
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black.withAlpha(18),
+                                        blurRadius: 8,
+                                        offset: const Offset(0, 4),
+                                      )
+                                    ],
+                                  ),
+                                  child: Icon(
+                                    isFavorite ? Icons.favorite : Icons.favorite_border,
+                                    color: isFavorite ? Colors.redAccent : Colors.black87,
+                                    size: 20,
+                                  ),
+                                ),
                               ),
-                              child: Icon(
-                                _liked ? Icons.favorite : Icons.favorite_border,
-                                color: _liked ? Colors.pinkAccent : Colors.black87,
-                                size: 20,
-                              ),
-                            ),
-                          ),
+                            );
+                          },
                         ),
                       ),
                     ],
@@ -134,9 +144,7 @@ class _ProductPageState extends State<ProductPage> {
                   ),
                   const SizedBox(height: 18),
                   Text(
-                    widget.product.description.isNotEmpty
-                        ? widget.product.description
-                        : 'This is a powerful video editing app used for creating high-quality content.',
+                    widget.product.shortDescription,
                     style: theme.textTheme.bodyMedium?.copyWith(
                       height: 1.5,
                       color: Colors.grey.shade800,
@@ -188,9 +196,7 @@ class _ProductPageState extends State<ProductPage> {
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 16, vertical: 12),
                             child: Text(
-                              widget.product.description.isNotEmpty
-                                  ? widget.product.description
-                                  : 'No additional details available.',
+                              widget.product.detailedDescriptionOrDefault,
                               style: theme.textTheme.bodyMedium?.copyWith(
                                 color: Colors.grey.shade800,
                                 height: 1.45,

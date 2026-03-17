@@ -1,12 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
 import 'routes.dart';
 import 'screens/splash/splash_screen.dart';
+import 'services/auth_service.dart';
 import 'services/favorites_service.dart';
+import 'providers/favorites_provider.dart';
 import 'constants.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await FavoritesService.instance.init();
+  final token = await AuthService.getToken();
+  await FavoritesService.instance.init(userToken: token);
   runApp(const MyApp());
 }
 
@@ -15,9 +20,11 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: 'TS Speed Shop',
+    return ChangeNotifierProvider(
+      create: (_) => FavoritesProvider(),
+      child: MaterialApp(
+        debugShowCheckedModeBanner: false,
+        title: 'TS Speed Shop',
 
       theme: ThemeData(
         primaryColor: kPrimaryColor,
@@ -72,7 +79,8 @@ class MyApp extends StatelessWidget {
 
       initialRoute: SplashScreen.routeName,
       routes: routes,
-    );
+    ),
+  );
   }
 }
 

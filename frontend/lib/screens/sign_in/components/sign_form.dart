@@ -115,6 +115,7 @@ class _SignFormState extends State<SignForm>
         _passwordController.text,
       );
 
+      if (!mounted) return;
       setState(() => _isLoading = false);
 
       if (result['success'] == true) {

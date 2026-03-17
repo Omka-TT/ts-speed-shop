@@ -1,9 +1,13 @@
 import 'package:dio/dio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'favorites_service.dart';
+
 const _kAuthTokenKey = 'auth_token';
 
 class AuthService {
+  static const String authTokenKey = _kAuthTokenKey;
+
   final Dio dio = Dio(
     BaseOptions(
       baseUrl: "http://127.0.0.1:8000/api",
@@ -15,6 +19,17 @@ class AuthService {
       },
     )
   );
+
+  static Future<String?> getToken() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_kAuthTokenKey);
+  }
+
+  static Future<void> clearToken() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_kAuthTokenKey);
+    await FavoritesService.instance.setUserToken(null);
+  }
 
   Future<Map<String, dynamic>> login(String username, String email, String password) async {
     try {
@@ -38,6 +53,9 @@ class AuthService {
         if (token != null && token.isNotEmpty) {
           final prefs = await SharedPreferences.getInstance();
           await prefs.setString(_kAuthTokenKey, token);
+
+          // Ensure favorites are scoped to the logged in user.
+          await FavoritesService.instance.setUserToken(token);
         }
 
         return {

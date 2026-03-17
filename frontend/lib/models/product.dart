@@ -6,6 +6,7 @@ class Product {
   final int id;
   final String title;
   final String description;
+  final String detailedDescription;
   final List<String> images;
   final List<Color> colors;
   final double rating;
@@ -23,13 +24,77 @@ class Product {
     required this.title,
     required this.price,
     required this.description,
+    required this.detailedDescription,
   });
+
+  /// Primary image to show in the UI.
+  ///
+  /// Falls back to a default asset based on the product ID if no images are provided.
+  String get primaryImage {
+    if (images.isNotEmpty) return images.first;
+    return getImageByProductId(id);
+  }
+
+  /// Returns a per-product default image path by id.
+  ///
+  /// This is used when a product has no images provided (e.g. backend response
+  /// missing image data) but we still want a unique asset per product.
+  static String getImageByProductId(int id) {
+    const defaultImages = [
+      'assets/images/capcut-logo.jpg',
+      'assets/images/Adobe_After_Effects_logo.png',
+      'assets/images/filmora_logo.png',
+    ];
+
+    if (id <= 0) return defaultImages.first;
+
+    // Cycle through our default image set so different products get different
+    // placeholder artwork even if their IDs are outside of the small sample range.
+    final index = (id - 1) % defaultImages.length;
+    return defaultImages[index];
+  }
+
+  /// A short description for list/detail headers.
+  String get shortDescription {
+    if (description.isNotEmpty) return description;
+    return _defaultShortDescriptionForId(id);
+  }
+
+  /// A longer description shown in the "Detailed information" section.
+  String get detailedDescriptionOrDefault {
+    if (detailedDescription.isNotEmpty) return detailedDescription;
+    return _defaultDetailedDescriptionForId(id);
+  }
+
+  static String _defaultShortDescriptionForId(int id) {
+    const descriptions = {
+      1: 'A powerful and easy-to-use video editing app for creators.',
+      2: 'A professional tool for motion graphics and visual effects.',
+      3: 'A user-friendly video editor with advanced features and effects.',
+    };
+
+    return descriptions[id] ?? 'A great tool for creators.';
+  }
+
+  static String _defaultDetailedDescriptionForId(int id) {
+    const details = {
+      1:
+          'CapCut offers advanced editing tools, transitions, and effects, making it perfect for social media content creators.',
+      2:
+          'Used by professionals worldwide, After Effects allows you to create cinematic visual effects and motion graphics.',
+      3:
+          'Filmora combines simplicity and power, offering a wide range of editing tools, templates, and visual effects.',
+    };
+
+    return details[id] ?? 'No additional information is available for this product.';
+  }
 
   factory Product.fromJson(Map<String, dynamic> json) {
     // Backend may use different naming conventions
     final id = json['id'] is int ? json['id'] as int : int.tryParse('${json['id']}') ?? 0;
     final name = json['name'] ?? json['title'] ?? '';
     final description = json['description'] ?? '';
+    final detailedDescription = json['detailed_description'] ?? json['details'] ?? description;
 
     final dynamic imageField = json['image'] ?? json['image_url'] ?? json['images'];
     List<String> images = [];
@@ -43,11 +108,9 @@ class Product {
           .toList();
     }
 
-    // If backend did not provide images, fall back to placeholder assets.
+    // If backend did not provide images, fall back to a per-product default.
     if (images.isEmpty) {
-      images = [
-        "assets/images/capcut-logo.jpg",
-      ];
+      images = [getImageByProductId(id)];
     }
 
     // Ensure price is double
@@ -74,6 +137,7 @@ class Product {
       id: id,
       title: name.toString(),
       description: description.toString(),
+      detailedDescription: detailedDescription.toString(),
       price: price,
       rating: effectiveRating,
       images: images,
@@ -93,6 +157,7 @@ class Product {
       'id': id,
       'name': title,
       'description': description,
+      'detailed_description': detailedDescription,
       'price': price,
       'rating': rating,
       'image': images.isNotEmpty ? images.first : null,
@@ -108,10 +173,7 @@ List<Product> demoProducts = [
   Product(
     id: 1,
     images: [
-      "assets/images/ps4_console_white_1.png",
-      "assets/images/ps4_console_white_2.png",
-      "assets/images/ps4_console_white_3.png",
-      "assets/images/ps4_console_white_4.png",
+      "assets/images/capcut-logo.jpg",
     ],
     colors: [
       const Color(0xFFF6625E),
@@ -119,17 +181,19 @@ List<Product> demoProducts = [
       const Color(0xFFDECB9C),
       Colors.white,
     ],
-    title: "Wireless Controller for PS4™",
-    price: 64.99,
-    description: description,
-    rating: 4.8,
+    title: "CapCut",
+    price: 0.0,
+    description: "A powerful and easy-to-use video editing app for creators.",
+    detailedDescription:
+        "CapCut offers advanced editing tools, transitions, and effects, making it perfect for social media content creators.",
+    rating: 4.7,
     isFavourite: true,
     isPopular: true,
   ),
   Product(
     id: 2,
     images: [
-      "assets/images/Image Popular Product 2.png",
+      "assets/images/Adobe_After_Effects_logo.png",
     ],
     colors: [
       const Color(0xFFF6625E),
@@ -137,89 +201,19 @@ List<Product> demoProducts = [
       const Color(0xFFDECB9C),
       Colors.white,
     ],
-    title: "Nike Sport White - Man Pant",
-    price: 50.5,
-    description: description,
-    rating: 4.1,
-    isPopular: true,
-  ),
-  Product(
-    id: 3,
-    images: [
-      "assets/images/glap.png",
-    ],
-    colors: [
-      const Color(0xFFF6625E),
-      const Color(0xFF836DB8),
-      const Color(0xFFDECB9C),
-      Colors.white,
-    ],
-    title: "Gloves XC Omega - Polygon",
-    price: 36.55,
-    description: description,
-    rating: 4.1,
-    isFavourite: true,
-    isPopular: true,
-  ),
-  Product(
-    id: 4,
-    images: [
-      "assets/images/wireless headset.png",
-    ],
-    colors: [
-      const Color(0xFFF6625E),
-      const Color(0xFF836DB8),
-      const Color(0xFFDECB9C),
-      Colors.white,
-    ],
-    title: "Logitech Head",
-    price: 20.20,
-    description: description,
-    rating: 4.1,
-    isFavourite: true,
-  ),
-  Product(
-    id: 1,
-    images: [
-      "assets/images/ps4_console_white_1.png",
-      "assets/images/ps4_console_white_2.png",
-      "assets/images/ps4_console_white_3.png",
-      "assets/images/ps4_console_white_4.png",
-    ],
-    colors: [
-      const Color(0xFFF6625E),
-      const Color(0xFF836DB8),
-      const Color(0xFFDECB9C),
-      Colors.white,
-    ],
-    title: "Wireless Controller for PS4™",
-    price: 64.99,
-    description: description,
+    title: "Adobe After Effects",
+    price: 19.99,
+    description: "A professional tool for motion graphics and visual effects.",
+    detailedDescription:
+        "Used by professionals worldwide, After Effects allows you to create cinematic visual effects and motion graphics.",
     rating: 4.8,
-    isFavourite: true,
-    isPopular: true,
-  ),
-  Product(
-    id: 2,
-    images: [
-      "assets/images/Image Popular Product 2.png",
-    ],
-    colors: [
-      const Color(0xFFF6625E),
-      const Color(0xFF836DB8),
-      const Color(0xFFDECB9C),
-      Colors.white,
-    ],
-    title: "Nike Sport White - Man Pant",
-    price: 50.5,
-    description: description,
-    rating: 4.1,
+    isFavourite: false,
     isPopular: true,
   ),
   Product(
     id: 3,
     images: [
-      "assets/images/glap.png",
+      "assets/images/filmora_logo.png",
     ],
     colors: [
       const Color(0xFFF6625E),
@@ -227,33 +221,15 @@ List<Product> demoProducts = [
       const Color(0xFFDECB9C),
       Colors.white,
     ],
-    title: "Gloves XC Omega - Polygon",
-    price: 36.55,
-    description: description,
-    rating: 4.1,
+    title: "Filmora",
+    price: 39.99,
+    description: "A user-friendly video editor with advanced features and effects.",
+    detailedDescription:
+        "Filmora combines simplicity and power, offering a wide range of editing tools, templates, and visual effects.",
+    rating: 4.4,
     isFavourite: true,
     isPopular: true,
-  ),
-  Product(
-    id: 4,
-    images: [
-      "assets/images/wireless headset.png",
-    ],
-    colors: [
-      const Color(0xFFF6625E),
-      const Color(0xFF836DB8),
-      const Color(0xFFDECB9C),
-      Colors.white,
-    ],
-    title: "Logitech Head",
-    price: 20.20,
-    description: description,
-    rating: 4.1,
-    isFavourite: true,
   ),
 ];
-
-const String description =
-    "Wireless Controller for PS4™ gives you what you want in your gaming from over precision control your games to sharing …";
 
 

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../services/auth_service.dart';
 import 'components/profile_menu.dart';
 import 'components/profile_pic.dart';
 
@@ -42,7 +43,15 @@ class ProfileScreen extends StatelessWidget {
             ProfileMenu(
               text: "Log Out",
               icon: "assets/icons/Log out.svg",
-              press: () {},
+              press: () async {
+                final nav = Navigator.of(context);
+                await AuthService.clearToken();
+                if (!context.mounted) return;
+                nav.pushNamedAndRemoveUntil(
+                  '/sign_in',
+                  (route) => false,
+                );
+              },
             ),
           ],
         ),

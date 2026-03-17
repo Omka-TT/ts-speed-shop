@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:ts_speed_shop/components/product_card.dart';
 import 'package:ts_speed_shop/models/Product.dart';
-import 'package:ts_speed_shop/services/favorites_service.dart';
+import 'package:ts_speed_shop/providers/favorites_provider.dart';
 import 'package:ts_speed_shop/services/product_service.dart';
 
-
 class FavoriteScreen extends StatefulWidget {
+  static const String routeName = '/favorites';
+
   const FavoriteScreen({super.key});
 
   @override
@@ -62,52 +64,51 @@ class _FavoriteScreenState extends State<FavoriteScreen> {
                   }
 
                   final allProducts = snapshot.data ?? [];
-                  return ValueListenableBuilder<Set<int>>(
-                    valueListenable: FavoritesService.instance.favorites,
-                    builder: (context, favorites, _) {
-                      final favoriteProducts = allProducts
-                          .where((product) => favorites.contains(product.id))
-                          .toList();
+                  final favorites =
+                      context.watch<FavoritesProvider>().favoriteIds;
+                  final favoriteProducts = allProducts
+                      .where((product) => favorites.contains(product.id))
+                      .toList();
 
-                      if (favoriteProducts.isEmpty) {
-                        return Center(
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 24),
-                            child: Text(
-                              'You haven\'t favorited any products yet. Tap the heart icon on a product to save it here.',
-                              textAlign: TextAlign.center,
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .bodyMedium
-                                  ?.copyWith(color: Colors.grey[700]),
-                            ),
-                          ),
-                        );
-                      }
-
-                      return Padding(
-                        padding: const EdgeInsets.all(16),
-                        child: GridView.builder(
-                          itemCount: favoriteProducts.length,
-                          gridDelegate:
-                              const SliverGridDelegateWithMaxCrossAxisExtent(
-                            maxCrossAxisExtent: 200,
-                            childAspectRatio: 0.7,
-                            mainAxisSpacing: 20,
-                            crossAxisSpacing: 16,
-                          ),
-                          itemBuilder: (context, index) {
-                            final product = favoriteProducts[index];
-                            return ProductCard(product: product);
-                          },
+                  if (favoriteProducts.isEmpty) {
+                    return Center(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 24),
+                        child: Text(
+                          'You haven\'t favorited any products yet. Tap the heart icon on a product to save it here.',
+                          textAlign: TextAlign.center,
+                          style: Theme.of(context)
+                              .textTheme
+                              .bodyMedium
+                              ?.copyWith(color: Colors.grey[700]),
                         ),
-                      );
-                    },
+                      ),
+                    );
+                  }
+
+                  return Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: GridView.builder(
+                      itemCount: favoriteProducts.length,
+                      gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                        maxCrossAxisExtent: 220,
+                        mainAxisSpacing: 18,
+                        crossAxisSpacing: 16,
+                        childAspectRatio: 0.95,
+                      ),
+                      itemBuilder: (context, index) {
+                        final product = favoriteProducts[index];
+                        return ProductCard(
+                          product: product,
+                          aspectRatio: 1.05,
+                        );
+                      },
+                    ),
                   );
                 },
               ),
             ),
-          )
+          ),
         ],
       ),
     );

@@ -7,12 +7,12 @@ import '../screens/product.dart';
 class ProductCard extends StatefulWidget {
   const ProductCard({
     Key? key,
-    this.width = 180,
+    this.width,
     this.aspectRatio = 0.86,
     required this.product,
   }) : super(key: key);
 
-  final double width;
+  final double? width;
   final double aspectRatio;
   final Product product;
 
@@ -41,20 +41,16 @@ class _ProductCardState extends State<ProductCard> {
   }
 
   Widget _buildImage() {
-    if (widget.product.id == 1) {
-      return Image.asset(
-        'assets/images/capcut-logo.jpg',
-        fit: BoxFit.cover,
-        width: double.infinity,
-        height: double.infinity,
-        errorBuilder: (context, error, stackTrace) => const Center(
-          child: Icon(Icons.broken_image, size: 40, color: Colors.white70),
-        ),
-      );
-    }
+    final imagePath = widget.product.primaryImage;
 
-    return const Center(
-      child: Icon(Icons.image_outlined, size: 48, color: Colors.white70),
+    return Image.asset(
+      imagePath,
+      fit: BoxFit.cover,
+      width: double.infinity,
+      height: double.infinity,
+      errorBuilder: (context, error, stackTrace) => const Center(
+        child: Icon(Icons.broken_image, size: 40, color: Colors.white70),
+      ),
     );
   }
 
@@ -134,7 +130,7 @@ class _ProductCardState extends State<ProductCard> {
                               children: [
                                 Text(
                                   widget.product.title,
-                                  maxLines: 1,
+                                  maxLines: 2,
                                   overflow: TextOverflow.ellipsis,
                                   style: theme.textTheme.titleMedium?.copyWith(
                                     color: Colors.white,
