@@ -7,8 +7,8 @@ import '../screens/product.dart';
 class ProductCard extends StatefulWidget {
   const ProductCard({
     Key? key,
-    this.width = 160,
-    this.aspectRatio = 1.02,
+    this.width = 180,
+    this.aspectRatio = 0.86,
     required this.product,
   }) : super(key: key);
 
@@ -23,58 +23,38 @@ class ProductCard extends StatefulWidget {
 class _ProductCardState extends State<ProductCard> {
   bool _isPressed = false;
   bool _isHovered = false;
+  bool _buyPressed = false;
 
-  void _onTapDown(_) {
-    setState(() {
-      _isPressed = true;
-    });
-  }
+  void _onTapDown(_) => setState(() => _isPressed = true);
+  void _onTapUp(_) => setState(() => _isPressed = false);
+  void _onTapCancel() => setState(() => _isPressed = false);
 
-  void _onTapUp(_) {
-    setState(() {
-      _isPressed = false;
-    });
-  }
-
-  void _onTapCancel() {
-    setState(() {
-      _isPressed = false;
-    });
-  }
+  void _onBuyDown(TapDownDetails _) => setState(() => _buyPressed = true);
+  void _onBuyUp(TapUpDetails _) => setState(() => _buyPressed = false);
+  void _onBuyCancel() => setState(() => _buyPressed = false);
 
   void _navigateToDetails() {
     Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (_) => ProductPage(product: widget.product),
-      ),
+      MaterialPageRoute(builder: (_) => ProductPage(product: widget.product)),
     );
   }
 
   Widget _buildImage() {
-    // Display the CapCut logo for ID 1, otherwise show a placeholder.
     if (widget.product.id == 1) {
       return Image.asset(
         'assets/images/capcut-logo.jpg',
         fit: BoxFit.cover,
-        errorBuilder: (context, error, stackTrace) {
-          return const Center(
-            child: Icon(
-              Icons.broken_image,
-              size: 40,
-              color: Colors.white70,
-            ),
-          );
-        },
+        width: double.infinity,
+        height: double.infinity,
+        errorBuilder: (context, error, stackTrace) => const Center(
+          child: Icon(Icons.broken_image, size: 40, color: Colors.white70),
+        ),
       );
     }
 
     return const Center(
-      child: Icon(
-        Icons.image_outlined,
-        size: 48,
-        color: Colors.white70,
-      ),
+      child: Icon(Icons.image_outlined, size: 48, color: Colors.white70),
     );
   }
 
@@ -84,9 +64,9 @@ class _ProductCardState extends State<ProductCard> {
 
     final boxShadow = [
       BoxShadow(
-        color: Colors.black.withOpacity(_isHovered ? 0.16 : 0.10),
+        color: Colors.black.withAlpha(_isHovered ? 30 : 22),
         blurRadius: _isHovered ? 18 : 12,
-        offset: const Offset(0, 6),
+        offset: const Offset(0, 8),
       ),
     ];
 
@@ -95,84 +75,131 @@ class _ProductCardState extends State<ProductCard> {
       onExit: (_) => setState(() => _isHovered = false),
       cursor: SystemMouseCursors.click,
       child: AnimatedScale(
-        scale: _isPressed ? 0.97 : 1.0,
+        scale: _isPressed ? 0.975 : 1.0,
         duration: const Duration(milliseconds: 120),
         curve: Curves.easeOut,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 180),
-          curve: Curves.easeOut,
-          width: widget.width,
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(18),
-            boxShadow: boxShadow,
-          ),
-          child: Material(
-            color: Colors.transparent,
-            child: InkWell(
-              borderRadius: BorderRadius.circular(18),
-              onTapDown: _onTapDown,
-              onTapUp: _onTapUp,
-              onTapCancel: _onTapCancel,
-              onTap: _navigateToDetails,
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(18),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
+        child: GestureDetector(
+          onTapDown: _onTapDown,
+          onTapUp: _onTapUp,
+          onTapCancel: _onTapCancel,
+          onTap: _navigateToDetails,
+          child: Container(
+            width: widget.width,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: boxShadow,
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(20),
+              child: AspectRatio(
+                aspectRatio: widget.aspectRatio,
+                child: Stack(
+                  fit: StackFit.expand,
                   children: [
-                    AspectRatio(
-                      aspectRatio: widget.aspectRatio,
-                      child: Container(
-                        width: double.infinity,
-                        color:
-                            kSecondaryColor.withAlpha((0.16 * 255).round()),
-                        child: _buildImage(),
+                    // Image
+                    Hero(
+                      tag: 'product-image-${widget.product.id}',
+                      child: _buildImage(),
+                    ),
+
+                    // Gradient overlay (dark -> transparent at top)
+                    Positioned.fill(
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.bottomCenter,
+                            end: Alignment.topCenter,
+                            colors: [
+                              Colors.black.withAlpha((0.54 * 255).round()),
+                              Colors.transparent,
+                            ],
+                            stops: const [0.0, 0.6],
+                          ),
+                        ),
                       ),
                     ),
-                    Padding(
-                      padding: const EdgeInsets.all(12),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.start,
+
+                    // Bottom content: title + price + buy button
+                    Positioned(
+                      left: 12,
+                      right: 12,
+                      bottom: 12,
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
-                          Text(
-                            widget.product.title,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: theme.textTheme.bodyMedium?.copyWith(
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                          const SizedBox(height: 10),
-                          Row(
-                            children: [
-                              Expanded(
-                                child: Text(
-                                  "\$${widget.product.price.toStringAsFixed(2)}",
+                          Expanded(
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  widget.product.title,
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                   style: theme.textTheme.titleMedium?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                    color: kPrimaryColor,
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w700,
                                   ),
                                 ),
-                              ),
-                              const SizedBox(width: 8),
-                              Text(
-                                widget.product.isPopular
-                                    ? 'Available'
-                                    : 'Not available',
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: theme.textTheme.bodySmall?.copyWith(
-                                  color: widget.product.isPopular
-                                      ? Colors.green
-                                      : Colors.red,
-                                  fontWeight: FontWeight.w600,
+                                const SizedBox(height: 6),
+                                Text(
+                                  '\$${widget.product.price.toStringAsFixed(2)}',
+                                  style: theme.textTheme.titleSmall?.copyWith(
+                                    color: kPrimaryColor,
+                                    fontWeight: FontWeight.w800,
+                                    fontSize: 16,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+
+                          const SizedBox(width: 10),
+
+                          // Buy button overlay
+                          GestureDetector(
+                            onTapDown: _onBuyDown,
+                            onTapUp: _onBuyUp,
+                            onTapCancel: _onBuyCancel,
+                            onTap: () {
+                              // quick scale effect handled by state; then navigate
+                              setState(() => _buyPressed = false);
+                              _navigateToDetails();
+                            },
+                            child: AnimatedScale(
+                              scale: _buyPressed ? 0.93 : 1.0,
+                              duration: const Duration(milliseconds: 90),
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 14, vertical: 10),
+                                decoration: BoxDecoration(
+                                  color: kPrimaryColor,
+                                  borderRadius: BorderRadius.circular(14),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withAlpha(30),
+                                      blurRadius: 8,
+                                      offset: const Offset(0, 6),
+                                    )
+                                  ],
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    const Icon(Icons.shopping_bag_outlined,
+                                        color: Colors.white, size: 18),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      'Buy',
+                                      style: theme.textTheme.labelLarge?.copyWith(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.w700,
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
-                            ],
+                            ),
                           ),
                         ],
                       ),
@@ -187,4 +214,4 @@ class _ProductCardState extends State<ProductCard> {
     );
   }
 }
-
+    
