@@ -8,8 +8,17 @@ class Category(models.Model):
         return self.name
     
 class Product(models.Model):
+    TYPE_PRODUCT = "product"
+    TYPE_COURSE = "course"
+
+    TYPE_CHOICES = [
+        (TYPE_PRODUCT, "Product"),
+        (TYPE_COURSE, "Course"),
+    ]
+
     name = models.CharField(max_length=100)
     price = models.DecimalField(max_digits=10, decimal_places=2)
+    type = models.CharField(max_length=20, choices=TYPE_CHOICES, default=TYPE_PRODUCT)
     category = models.ForeignKey(Category, on_delete=models.CASCADE)
     available = models.BooleanField(default=True)
 

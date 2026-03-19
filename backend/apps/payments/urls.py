@@ -1,18 +1,13 @@
 from django.urls import path
 from .views import (
-    CreatePaymentView,
+    PaymentListCreateView,
     UploadPaymentScreenshotView,
     MyPaymentsView,
     ConfirmPaymentView,
 )
 
 urlpatterns = [
-
-    path(
-        "create/",
-        CreatePaymentView.as_view(),
-        name="create-payment"
-    ),
+    path("", PaymentListCreateView.as_view(), name="payments-list-create"),
 
     path(
         "upload-screenshot/<int:payment_id>/",

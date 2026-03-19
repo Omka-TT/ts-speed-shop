@@ -1,25 +1,37 @@
 from rest_framework import serializers
-from .models import Cart, CartItem
+
+from apps.products.models import Product
 from apps.products.serializers import ProductSerializer
+from .models import CartItem
+
 
 class CartItemSerializer(serializers.ModelSerializer):
     product = ProductSerializer(read_only=True)
-    product_id = serializers.PrimaryKeyRelatedField(
-        queryset=ProductSerializer.Meta.model.objects.all(),
-        source='product',
-        write_only=True
-    )
+    product_id = serializers.IntegerField(write_only=True)
 
     class Meta:
         model = CartItem
         fields = ['id', 'product', 'product_id', 'quantity']
+        read_only_fields = ['id', 'product']
 
-class CartSerializer(serializers.ModelSerializer):
-    items = CartItemSerializer(source='cartitem_set', many=True, read_only=True)
+    def validate_product_id(self, value):
+        try:
+            return Product.objects.get(pk=value)
+        except Product.DoesNotExist:
+            raise serializers.ValidationError("Product does not exist")
 
-    class Meta:
-        model = Cart
-        fields = ['id', 'user', 'items']
+    def create(self, validated_data):
+        user = self.context['request'].user
+        product = validated_data.pop('product_id')
+        quantity = validated_data.get('quantity', 1)
+
+        existing_item = CartItem.objects.filter(user=user, product=product).first()
+        if existing_item:
+            existing_item.quantity += quantity
+            existing_item.save()
+            return existing_item
+
+        return CartItem.objects.create(user=user, product=product, quantity=quantity)
 
 
 
