@@ -46,9 +46,10 @@ class AuthService {
       print('Login Response Data: ${response.data}');
 
       if (response.statusCode == 200) {
-        final token = (response.data is Map && response.data['token'] != null)
-            ? response.data['token'].toString()
-            : null;
+        // dj-rest-auth token endpoint returns {"key": "..."}
+        // SimpleJWT returns {"access": "...", "refresh": "..."}
+        final data = response.data is Map ? response.data as Map : <String, dynamic>{};
+        final token = (data['token'] ?? data['key'] ?? data['access'])?.toString();
 
         if (token != null && token.isNotEmpty) {
           final prefs = await SharedPreferences.getInstance();
@@ -56,6 +57,10 @@ class AuthService {
 
           // Ensure favorites are scoped to the logged in user.
           await FavoritesService.instance.setUserToken(token);
+
+          print('Saved auth token: $token');
+        } else {
+          print('Login success but no token found in response: ${response.data}');
         }
 
         return {

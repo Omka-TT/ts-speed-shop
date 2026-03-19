@@ -1,5 +1,7 @@
 from pathlib import Path
 
+from corsheaders.defaults import default_headers
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
@@ -83,6 +85,7 @@ STATIC_ROOT = BASE_DIR / "staticfiles"  # для production
 
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
+        "rest_framework.authentication.TokenAuthentication",
         "rest_framework_simplejwt.authentication.JWTAuthentication",
     ),
     "DEFAULT_PERMISSION_CLASSES": [
@@ -130,6 +133,13 @@ MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
 
 CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOW_CREDENTIALS = True
+
+# Ensure the browser is allowed to send Authorization headers from Flutter Web.
+CORS_ALLOW_HEADERS = list(default_headers) + [
+    "authorization",
+    "Authorization",
+]
 
 
 

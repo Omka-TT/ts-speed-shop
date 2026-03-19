@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/Product.dart';
+import 'auth_service.dart';
 
 const _kAuthTokenKey = 'auth_token';
 
@@ -42,6 +43,26 @@ class ProductService {
             },
           ),
         ) {
+    // Attach token + Debugging headers to every outgoing request.
+    _dio.interceptors.add(
+      InterceptorsWrapper(
+        onRequest: (options, handler) async {
+          final token = await AuthService.getToken();
+          if (token != null && token.trim().isNotEmpty) {
+            final authHeader = 'Token ${token.trim()}';
+            options.headers['Authorization'] = authHeader;
+            // Debug: confirm header is being set.
+            // Review browser DevTools Network tab to ensure it is sent.
+            print('Dio request: ${options.method} ${options.uri}');
+            print('Dio Authorization header: $authHeader');
+          } else {
+            print('Dio request without token: ${options.method} ${options.uri}');
+          }
+          return handler.next(options);
+        },
+      ),
+    );
+
     _dio.interceptors.add(
       LogInterceptor(
         requestBody: true,
@@ -73,14 +94,7 @@ class ProductService {
     }
 
     try {
-      final response = await _dio.get(
-        '/products/',
-        options: Options(
-          headers: {
-            'Authorization': 'Token $token',
-          },
-        ),
-      );
+      final response = await _dio.get('/products/');
 
       if (response.statusCode == 200) {
         final data = response.data;
