@@ -4,14 +4,16 @@ import 'package:provider/provider.dart';
 import 'routes.dart';
 import 'screens/splash/splash_screen.dart';
 import 'services/auth_service.dart';
-import 'services/favorites_service.dart';
 import 'providers/favorites_provider.dart';
+import 'providers/product_provider.dart';
 import 'constants.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  final token = await AuthService.getToken();
-  await FavoritesService.instance.init(userToken: token);
+
+  // Ensure the auth token is loaded into memory before the UI mounts.
+  await AuthService.instance.init();
+
   runApp(const MyApp());
 }
 
@@ -20,8 +22,11 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (_) => FavoritesProvider(),
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => FavoritesProvider()),
+        ChangeNotifierProvider(create: (_) => ProductProvider()),
+      ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
         title: 'TS Speed Shop',

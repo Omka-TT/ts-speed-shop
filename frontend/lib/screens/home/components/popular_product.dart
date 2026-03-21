@@ -1,36 +1,22 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import '../../../components/product_card.dart';
-import '../../../models/Product.dart';
-import '../../../services/product_service.dart';
+import '../../../providers/product_provider.dart';
 import '../../products/products_screen.dart';
 import 'section_title.dart';
 
-class PopularProducts extends StatefulWidget {
+class PopularProducts extends StatelessWidget {
   const PopularProducts({super.key});
 
   @override
-  State<PopularProducts> createState() => _PopularProductsState();
-}
-
-class _PopularProductsState extends State<PopularProducts> {
-  late final ProductService _productService;
-  late Future<List<Product>> _futurePopular;
-
-  @override
-  void initState() {
-    super.initState();
-    _productService = ProductService();
-    _futurePopular = _loadPopular();
-  }
-
-  Future<List<Product>> _loadPopular() async {
-    final products = await _productService.getProducts();
-    return products.where((p) => p.isPopular).toList();
-  }
-
-  @override
   Widget build(BuildContext context) {
+    final provider = context.watch<ProductProvider>();
+
+    final isLoading = provider.isLoading;
+    final error = provider.error;
+    final popularProducts = provider.products.where((p) => p.isPopular).toList();
+
     return Column(
       children: [
         Padding(
@@ -44,14 +30,13 @@ class _PopularProductsState extends State<PopularProducts> {
         ),
         SizedBox(
           height: 260,
-          child: FutureBuilder<List<Product>>(
-            future: _futurePopular,
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
+          child: Builder(
+            builder: (context) {
+              if (isLoading) {
                 return const Center(child: CircularProgressIndicator());
               }
 
-              if (snapshot.hasError) {
+              if (error != null) {
                 return Center(
                   child: Text(
                     'Failed to load popular products.',
@@ -60,8 +45,7 @@ class _PopularProductsState extends State<PopularProducts> {
                 );
               }
 
-              final products = snapshot.data ?? [];
-              if (products.isEmpty) {
+              if (popularProducts.isEmpty) {
                 return Center(
                   child: Text(
                     'No popular products available.',
@@ -73,10 +57,10 @@ class _PopularProductsState extends State<PopularProducts> {
               return ListView.separated(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 scrollDirection: Axis.horizontal,
-                itemCount: products.length,
+                itemCount: popularProducts.length,
                 separatorBuilder: (_, __) => const SizedBox(width: 16),
                 itemBuilder: (context, index) {
-                  final product = products[index];
+                  final product = popularProducts[index];
                   return ProductCard(product: product);
                 },
               );

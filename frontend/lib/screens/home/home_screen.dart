@@ -1,15 +1,34 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
+import '../../providers/favorites_provider.dart';
+import '../../providers/product_provider.dart';
 import 'components/categories.dart';
 import 'components/discount_banner.dart';
 import 'components/home_header.dart';
 import 'components/popular_product.dart';
 import 'components/special_offers.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   static String routeName = "/home";
 
   const HomeScreen({super.key});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  @override
+  void initState() {
+    super.initState();
+    // Fetch products when the home screen loads
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<ProductProvider>().fetchProducts();
+      context.read<FavoritesProvider>().fetchFavorites();
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return const Scaffold(

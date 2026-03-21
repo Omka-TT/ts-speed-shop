@@ -109,7 +109,7 @@ class _SignFormState extends State<SignForm>
     setState(() => _isLoading = true);
 
     try {
-      final result = await AuthService().login(
+      final result = await AuthService.instance.login(
         _usernameController.text.trim(),
         _emailController.text.trim(),
         _passwordController.text,

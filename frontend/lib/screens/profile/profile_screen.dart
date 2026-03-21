@@ -45,7 +45,7 @@ class ProfileScreen extends StatelessWidget {
               icon: "assets/icons/Log out.svg",
               press: () async {
                 final nav = Navigator.of(context);
-                await AuthService.clearToken();
+                await AuthService.instance.clearToken();
                 if (!context.mounted) return;
                 nav.pushNamedAndRemoveUntil(
                   '/sign_in',

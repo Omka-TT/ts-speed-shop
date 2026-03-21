@@ -11,6 +11,7 @@ class Product {
   final List<Color> colors;
   final double rating;
   final double price;
+  final String type;
   final bool isFavourite;
   final bool isPopular;
 
@@ -18,6 +19,7 @@ class Product {
     required this.id,
     required this.images,
     required this.colors,
+    required this.type,
     this.rating = 0.0,
     this.isFavourite = false,
     this.isPopular = false,
@@ -26,6 +28,13 @@ class Product {
     required this.description,
     required this.detailedDescription,
   });
+
+  /// Supported product / course types.
+  static const String typeProduct = 'product';
+  static const String typeCourse = 'course';
+
+  bool get isProduct => type == typeProduct;
+  bool get isCourse => type == typeCourse;
 
   /// Primary image to show in the UI.
   ///
@@ -128,6 +137,13 @@ class Product {
       rating = double.tryParse(json['rating'].toString()) ?? 0.0;
     }
 
+    // Backend may provide a type field to distinguish between products and courses.
+    // Fallback to product if missing.
+    final dynamic typeField = json['type'] ?? json['product_type'] ?? json['category'];
+    final type = (typeField?.toString().toLowerCase() ?? '').contains('course')
+        ? Product.typeCourse
+        : Product.typeProduct;
+
     final bool available = json['available'] == true;
 
     // If backend does not provide rating, we can generate a stable pseudo-random rating.
@@ -139,6 +155,7 @@ class Product {
       description: description.toString(),
       detailedDescription: detailedDescription.toString(),
       price: price,
+      type: type,
       rating: effectiveRating,
       images: images,
       colors: const [
@@ -156,6 +173,7 @@ class Product {
     return {
       'id': id,
       'name': title,
+      'type': type,
       'description': description,
       'detailed_description': detailedDescription,
       'price': price,
@@ -181,6 +199,7 @@ List<Product> demoProducts = [
       const Color(0xFFDECB9C),
       Colors.white,
     ],
+    type: Product.typeProduct,
     title: "CapCut",
     price: 0.0,
     description: "A powerful and easy-to-use video editing app for creators.",
@@ -193,7 +212,7 @@ List<Product> demoProducts = [
   Product(
     id: 2,
     images: [
-      "assets/images/Adobe_After_Effects_logo.png",
+      "assets/images/capcut-logo.jpg",
     ],
     colors: [
       const Color(0xFFF6625E),
@@ -201,6 +220,7 @@ List<Product> demoProducts = [
       const Color(0xFFDECB9C),
       Colors.white,
     ],
+    type: Product.typeProduct,
     title: "Adobe After Effects",
     price: 19.99,
     description: "A professional tool for motion graphics and visual effects.",
@@ -221,6 +241,7 @@ List<Product> demoProducts = [
       const Color(0xFFDECB9C),
       Colors.white,
     ],
+    type: Product.typeProduct,
     title: "Filmora",
     price: 39.99,
     description: "A user-friendly video editor with advanced features and effects.",

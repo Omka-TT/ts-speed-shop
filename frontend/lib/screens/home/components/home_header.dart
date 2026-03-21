@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../cart/cart_screen.dart';
 import 'icon_btn_with_counter.dart';
-import 'search_field.dart';
 
 class HomeHeader extends StatelessWidget {
   const HomeHeader({
@@ -15,8 +14,18 @@ class HomeHeader extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          const Expanded(child: SearchField()),
-          const SizedBox(width: 16),
+          Expanded(
+            child: Text(
+              'TS-SPEED SHOP',
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: Colors.orange,
+                letterSpacing: 1.2,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ),
           IconBtnWithCounter(
             svgSrc: "assets/icons/Cart Icon.svg",
             press: () => Navigator.pushNamed(context, CartScreen.routeName),

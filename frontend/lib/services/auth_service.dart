@@ -1,45 +1,85 @@
 import 'package:dio/dio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'dio_client.dart';
 import 'favorites_service.dart';
 
 const _kAuthTokenKey = 'auth_token';
 
+/// Thrown when an authenticated request is made but no valid token is present.
+class AuthException implements Exception {
+  final String message;
+  AuthException(this.message);
+
+  @override
+  String toString() => 'AuthException: $message';
+}
+
 class AuthService {
+  static final AuthService instance = AuthService._internal();
+
+  AuthService._internal();
+
   static const String authTokenKey = _kAuthTokenKey;
 
-  final Dio dio = Dio(
-    BaseOptions(
-      baseUrl: "http://127.0.0.1:8000/api",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      validateStatus: (status) {
-        return status! < 500; // Принимаем все статусы кроме 500+
-      },
-    )
-  );
+  bool _initialized = false;
+  String? _token;
 
-  static Future<String?> getToken() async {
+  /// Loads the token from persistent storage.
+  ///
+  /// This should be called early in application startup so that the token is
+  /// available for all subsequent requests.
+  Future<void> init() async {
+    if (_initialized) return;
+
     final prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_kAuthTokenKey);
+    _token = prefs.getString(_kAuthTokenKey);
+    _initialized = true;
+
+    print('[AuthService] token loaded: ${_token != null}');
+
+    // Favorites are handled via Dio interceptor
   }
 
-  static Future<void> clearToken() async {
+  /// Returns the current token, loading it from storage if necessary.
+  Future<String?> getToken() async {
+    if (!_initialized) await init();
+
+    final trimmed = _token?.trim();
+    return (trimmed == null || trimmed.isEmpty) ? null : trimmed;
+  }
+
+  /// Saves a token to persistent storage and updates the in-memory cache.
+  Future<void> saveToken(String token) async {
+    final trimmed = token.trim();
+    if (trimmed.isEmpty) return;
+
+    _token = trimmed;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_kAuthTokenKey, trimmed);
+
+    print('[AuthService] token saved (length ${trimmed.length})');
+  }
+
+  /// Clears stored token and related state.
+  Future<void> clearToken() async {
+    _token = null;
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_kAuthTokenKey);
-    await FavoritesService.instance.setUserToken(null);
+
+    print('[AuthService] token cleared');
   }
 
   Future<Map<String, dynamic>> login(String username, String email, String password) async {
     try {
-      final response = await dio.post(
+      final response = await DioClient.instance.post(
         "/auth/login/",
         data: {
           "username": username,
           "email": email,
           "password": password
         },
+        options: Options(extra: {'requiresAuth': false}),
       );
 
       print('Login Response Status: ${response.statusCode}');
@@ -52,13 +92,7 @@ class AuthService {
         final token = (data['token'] ?? data['key'] ?? data['access'])?.toString();
 
         if (token != null && token.isNotEmpty) {
-          final prefs = await SharedPreferences.getInstance();
-          await prefs.setString(_kAuthTokenKey, token);
-
-          // Ensure favorites are scoped to the logged in user.
-          await FavoritesService.instance.setUserToken(token);
-
-          print('Saved auth token: $token');
+          await saveToken(token);
         } else {
           print('Login success but no token found in response: ${response.data}');
         }

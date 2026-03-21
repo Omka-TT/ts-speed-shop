@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:ts_speed_shop/screens/products/products_screen.dart';
+import 'package:provider/provider.dart';
 
+import '../../../components/product_card.dart';
+import '../../../providers/product_provider.dart';
+import '../../../screens/courses/courses_screen.dart';
 import 'section_title.dart';
 
 class SpecialOffers extends StatelessWidget {
@@ -10,37 +13,57 @@ class SpecialOffers extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final provider = context.watch<ProductProvider>();
+    final courses = provider.courses;
+
     return Column(
       children: [
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20),
           child: SectionTitle(
-            title: "Special for you",
-            press: () {},
+            title: 'Courses',
+            press: () {
+              Navigator.pushNamed(context, CoursesScreen.routeName);
+            },
           ),
         ),
-        SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          child: Row(
-            children: [
-              SpecialOfferCard(
-                image: "assets/images/Image Banner 2.png",
-                category: "Smartphone",
-                numOfBrands: 18,
-                press: () {
-                  Navigator.pushNamed(context, ProductsScreen.routeName);
+        SizedBox(
+          height: 260,
+          child: Builder(
+            builder: (context) {
+              if (provider.isLoading) {
+                return const Center(child: CircularProgressIndicator());
+              }
+
+              if (provider.error != null) {
+                return Center(
+                  child: Text(
+                    'Failed to load courses.',
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
+                );
+              }
+
+              if (courses.isEmpty) {
+                return Center(
+                  child: Text(
+                    'No courses available.',
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
+                );
+              }
+
+              return ListView.separated(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                scrollDirection: Axis.horizontal,
+                itemCount: courses.length,
+                separatorBuilder: (_, __) => const SizedBox(width: 16),
+                itemBuilder: (context, index) {
+                  final course = courses[index];
+                  return ProductCard(product: course);
                 },
-              ),
-              SpecialOfferCard(
-                image: "assets/images/Image Banner 3.png",
-                category: "Fashion",
-                numOfBrands: 24,
-                press: () {
-                  Navigator.pushNamed(context, ProductsScreen.routeName);
-                },
-              ),
-              const SizedBox(width: 20),
-            ],
+              );
+            },
           ),
         ),
       ],

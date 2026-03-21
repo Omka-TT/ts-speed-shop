@@ -6,23 +6,23 @@ import 'package:ts_speed_shop/screens/sign_in/sign_in_screen.dart';
 import 'package:ts_speed_shop/screens/home/components/search_field.dart';
 import 'package:ts_speed_shop/services/product_service.dart';
 
-class ProductsScreen extends StatefulWidget {
-  const ProductsScreen({super.key});
+class CoursesScreen extends StatefulWidget {
+  const CoursesScreen({super.key});
 
-  static String routeName = "/products";
+  static String routeName = "/courses";
 
   @override
-  State<ProductsScreen> createState() => _ProductsScreenState();
+  State<CoursesScreen> createState() => _CoursesScreenState();
 }
 
-class _ProductsScreenState extends State<ProductsScreen> {
+class _CoursesScreenState extends State<CoursesScreen> {
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
 
   @override
   void initState() {
     super.initState();
-    // Ensure products are loaded when this screen is first shown.
+    // Ensure courses are loaded when this screen is first shown.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<ProductProvider>().refresh();
     });
@@ -34,7 +34,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
     super.dispose();
   }
 
-  Future<void> _refreshProducts() async {
+  Future<void> _refreshCourses() async {
     await context.read<ProductProvider>().refresh();
   }
 
@@ -48,7 +48,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Products'),
+        title: const Text('Courses'),
       ),
       body: SafeArea(
         child: Padding(
@@ -57,13 +57,13 @@ class _ProductsScreenState extends State<ProductsScreen> {
             children: [
               SearchField(
                 controller: _searchController,
-                hintText: 'Search for products',
+                hintText: 'Search for courses',
                 onChanged: _onSearchChanged,
               ),
               const SizedBox(height: 16),
               Expanded(
                 child: RefreshIndicator(
-                  onRefresh: _refreshProducts,
+                  onRefresh: _refreshCourses,
                   child: _buildContent(context.watch<ProductProvider>()),
                 ),
               ),
@@ -106,24 +106,24 @@ class _ProductsScreenState extends State<ProductsScreen> {
 
       return _ErrorState(
         error: error,
-        onRetry: _refreshProducts,
+        onRetry: _refreshCourses,
       );
     }
 
-    final products = provider.products;
+    final courses = provider.courses;
     final lower = _searchQuery.trim().toLowerCase();
-    final filteredProducts = lower.isEmpty
-        ? products
-        : products
-            .where((product) => product.title.toLowerCase().contains(lower))
+    final filteredCourses = lower.isEmpty
+        ? courses
+        : courses
+            .where((course) => course.title.toLowerCase().contains(lower))
             .toList();
 
-    if (filteredProducts.isEmpty) {
+    if (filteredCourses.isEmpty) {
       return const _NoResultsState();
     }
 
     return GridView.builder(
-      itemCount: filteredProducts.length,
+      itemCount: filteredCourses.length,
       gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
         maxCrossAxisExtent: 220,
         childAspectRatio: 0.8,
@@ -131,8 +131,8 @@ class _ProductsScreenState extends State<ProductsScreen> {
         crossAxisSpacing: 16,
       ),
       itemBuilder: (context, index) {
-        final product = filteredProducts[index];
-        return ProductCard(product: product);
+        final course = filteredCourses[index];
+        return ProductCard(product: course);
       },
     );
   }
@@ -158,7 +158,7 @@ class _NoResultsState extends StatelessWidget {
             ),
             const SizedBox(height: 14),
             Text(
-              'No products found',
+              'No courses found with this name',
               style: theme.textTheme.titleMedium,
               textAlign: TextAlign.center,
             ),
@@ -202,7 +202,7 @@ class _ErrorState extends StatelessWidget {
             ),
             const SizedBox(height: 12),
             Text(
-              'Unable to load products.',
+              'Unable to load courses.',
               style: theme.textTheme.titleMedium,
               textAlign: TextAlign.center,
             ),
@@ -223,5 +223,3 @@ class _ErrorState extends StatelessWidget {
     );
   }
 }
-
-
