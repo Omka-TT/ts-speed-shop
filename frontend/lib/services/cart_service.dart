@@ -1,97 +1,71 @@
-// import 'package:dio/dio.dart';
-// import '../models/Cart.dart';
-// import '../models/Product.dart';
+import 'package:dio/dio.dart';
 
-// class CartService {
-//   late Dio dio;
-  
-//   CartService() {
-//     dio = Dio(
-//       BaseOptions(
-//         baseUrl: "http://127.0.0.1:8000/api",
-//         headers: {
-//           "Content-Type": "application/json",
-//           "Accept": "application/json",
-//         },
-//       ),
-//     );
-//   }
+import 'dio_client.dart';
 
-//   // Получение корзины с сервера
-//   Future<List<Cart>> getCart() async {
-//     try {
-//       final response = await dio.get("/cart/");
-      
-//       if (response.statusCode == 200) {
-//         if (response.data is List) {
-//           return (response.data as List)
-//               .map((item) => Cart.fromJson(item))
-//               .toList();
-//         }
-//       }
-//       return [];
-//     } catch (e) {
-//       print('Error fetching cart: $e');
-//       return [];
-//     }
-//   }
+/// A service for managing cart items via backend API.
+///
+class CartService {
+  CartService._internal();
 
-//   // Добавление товара в корзину на сервере
-//   Future<bool> addToCart(Product product, int quantity) async {
-//     try {
-//       final response = await dio.post(
-//         "/cart/add/",
-//         data: {
-//           'product_id': product.id,
-//           'quantity': quantity,
-//         },
-//       );
-      
-//       return response.statusCode == 200 || response.statusCode == 201;
-//     } catch (e) {
-//       print('Error adding to cart: $e');
-//       return false;
-//     }
-//   }
+  static final CartService instance = CartService._internal();
 
-//   // Обновление количества товара
-//   Future<bool> updateCartItem(int productId, int quantity) async {
-//     try {
-//       final response = await dio.put(
-//         "/cart/update/$productId/",
-//         data: {'quantity': quantity},
-//       );
-      
-//       return response.statusCode == 200;
-//     } catch (e) {
-//       print('Error updating cart: $e');
-//       return false;
-//     }
-//   }
+  /// Fetches the user's cart items from the backend.
+  Future<List<Map<String, dynamic>>> getCartItems() async {
+    try {
+      final response = await DioClient.instance.get('/cart/');
+      if (response.statusCode == 200) {
+        final data = response.data;
+        print('[CartService] response data: $data');
+        if (data is List) {
+          final cartItems = data.map((item) => item as Map<String, dynamic>).toList();
+          print('[CartService] fetched ${cartItems.length} cart items');
+          return cartItems;
+        } else {
+          return [];
+        }
+      } else {
+        throw Exception('Failed to load cart: ${response.statusCode}');
+      }
+    } on DioException catch (e) {
+      print('[CartService] error fetching cart: $e');
+      throw Exception('Network error while loading cart');
+    }
+  }
 
-//   // Удаление товара из корзины
-//   Future<bool> removeFromCart(int productId) async {
-//     try {
-//       final response = await dio.delete("/cart/remove/$productId/");
-      
-//       return response.statusCode == 200 || response.statusCode == 204;
-//     } catch (e) {
-//       print('Error removing from cart: $e');
-//       return false;
-//     }
-//   }
+  /// Adds a product to the user's cart.
+  Future<void> addToCart(int productId) async {
+    try {
+      print('[CartService] sending request body: {"product_id": $productId}');
+      final response = await DioClient.instance.post(
+        '/cart/',
+        data: {'product_id': productId},
+      );
+      if (response.statusCode == 201) {
+        print('[CartService] added product $productId to cart');
+      } else {
+        throw Exception('Failed to add to cart: ${response.statusCode}');
+      }
+    } on DioException catch (e) {
+      print('[CartService] error adding to cart: $e');
+      throw Exception('Network error while adding to cart');
+    }
+  }
 
-//   // Очистка корзины
-//   Future<bool> clearCart() async {
-//     try {
-//       final response = await dio.delete("/cart/clear/");
-      
-//       return response.statusCode == 200;
-//     } catch (e) {
-//       print('Error clearing cart: $e');
-//       return false;
-//     }
-//   }
-// }
+  /// Removes a cart item from the user's cart.
+  Future<void> removeFromCart(int cartItemId) async {
+    try {
+      print('[CartService] deleting cart item with id: $cartItemId');
+      final response = await DioClient.instance.delete('/cart/$cartItemId/');
+      if (response.statusCode == 204) {
+        print('[CartService] removed cart item $cartItemId');
+      } else {
+        throw Exception('Failed to remove from cart: ${response.statusCode}');
+      }
+    } on DioException catch (e) {
+      print('[CartService] error removing from cart: $e');
+      throw Exception('Network error while removing from cart');
+    }
+  }
+}
 
 

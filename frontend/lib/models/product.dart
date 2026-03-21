@@ -122,13 +122,16 @@ class Product {
       images = [getImageByProductId(id)];
     }
 
-    // Ensure price is double
+    // Ensure price is double - handle both String and num from backend
     double price = 0.0;
     if (json['price'] is num) {
       price = (json['price'] as num).toDouble();
+    } else if (json['price'] is String) {
+      price = double.tryParse(json['price'] as String) ?? 0.0;
     } else if (json['price'] != null) {
       price = double.tryParse(json['price'].toString()) ?? 0.0;
     }
+    print('[Product.fromJson] Price: $price (type: ${price.runtimeType}) from: ${json['price']} (type: ${json['price'].runtimeType})');
 
     double rating = 0.0;
     if (json['rating'] is num) {

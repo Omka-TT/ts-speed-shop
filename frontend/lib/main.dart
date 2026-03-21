@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'routes.dart';
 import 'screens/splash/splash_screen.dart';
 import 'services/auth_service.dart';
+import 'providers/cart_provider.dart';
 import 'providers/favorites_provider.dart';
 import 'providers/product_provider.dart';
 import 'constants.dart';
@@ -24,6 +25,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
+        ChangeNotifierProvider(create: (_) => CartProvider()),
         ChangeNotifierProvider(create: (_) => FavoritesProvider()),
         ChangeNotifierProvider(create: (_) => ProductProvider()),
       ],

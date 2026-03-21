@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../providers/cart_provider.dart';
 import '../../providers/favorites_provider.dart';
 import '../../providers/product_provider.dart';
 import 'components/categories.dart';
@@ -26,6 +27,7 @@ class _HomeScreenState extends State<HomeScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<ProductProvider>().fetchProducts();
       context.read<FavoritesProvider>().fetchFavorites();
+      context.read<CartProvider>().fetchCartItems();
     });
   }
 

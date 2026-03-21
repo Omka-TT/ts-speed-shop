@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
+import 'package:provider/provider.dart';
 
-import '../../../constants.dart';
+import '../../../providers/cart_provider.dart';
 
 class CheckoutCard extends StatelessWidget {
   const CheckoutCard({
@@ -35,51 +35,79 @@ class CheckoutCard extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(10),
-                  height: 40,
-                  width: 40,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF5F6F9),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: SvgPicture.asset("assets/icons/receipt.svg"),
-                ),
-                const Spacer(),
-                const Text("Add voucher code"),
-                const SizedBox(width: 8),
-                const Icon(
-                  Icons.arrow_forward_ios,
-                  size: 12,
-                  color: kTextColor,
-                )
-              ],
-            ),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                const Expanded(
-                  child: Text.rich(
-                    TextSpan(
-                      text: "Total:\n",
-                      children: [
+            Consumer<CartProvider>(
+              builder: (context, cartProvider, _) {
+                double total = 0;
+                for (var item in cartProvider.cartItems) {
+                  // Safe price parsing: handle String or num from backend
+                  dynamic priceValue = item['product']['price'];
+                  double price = 0.0;
+                  
+                  if (priceValue is num) {
+                    price = (priceValue).toDouble();
+                  } else if (priceValue is String) {
+                    price = double.tryParse(priceValue) ?? 0.0;
+                  }
+                  
+                  final qty = (item['quantity'] ?? 1) as int;
+                  
+                  // Debug log
+                  print('[CheckoutCard] Price: $price (type: ${price.runtimeType}), Qty: $qty');
+                  
+                  total += (price * qty);
+                }
+
+                return Row(
+                  children: [
+                    Expanded(
+                      child: Text.rich(
                         TextSpan(
-                          text: "\$337.15",
-                          style: TextStyle(fontSize: 16, color: Colors.black),
+                          text: "Total:\n",
+                          style: Theme.of(context).textTheme.bodyLarge,
+                          children: [
+                            TextSpan(
+                              text: "\$${total.toStringAsFixed(2)}",
+                              style: const TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black,
+                              ),
+                            ),
+                          ],
                         ),
-                      ],
+                      ),
                     ),
-                  ),
-                ),
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: () {},
-                    child: const Text("Check Out"),
-                  ),
-                ),
-              ],
+                    Expanded(
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.orange,
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          elevation: 4,
+                        ),
+                        onPressed: () {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text("Proceeding to payment..."),
+                              duration: Duration(seconds: 2),
+                            ),
+                          );
+                        },
+                        child: const Text(
+                          "Pay",
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                );
+              },
             ),
           ],
         ),

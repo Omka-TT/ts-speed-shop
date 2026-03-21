@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../cart/cart_screen.dart';
+import '../../../providers/cart_provider.dart';
 import 'icon_btn_with_counter.dart';
 
 class HomeHeader extends StatelessWidget {
@@ -26,15 +28,12 @@ class HomeHeader extends StatelessWidget {
               textAlign: TextAlign.center,
             ),
           ),
-          IconBtnWithCounter(
-            svgSrc: "assets/icons/Cart Icon.svg",
-            press: () => Navigator.pushNamed(context, CartScreen.routeName),
-          ),
-          const SizedBox(width: 8),
-          IconBtnWithCounter(
-            svgSrc: "assets/icons/Bell.svg",
-            numOfitem: 3,
-            press: () {},
+          Consumer<CartProvider>(
+            builder: (context, cartProvider, child) => IconBtnWithCounter(
+              svgSrc: "assets/icons/Cart Icon.svg",
+              numOfitem: cartProvider.cartItemCount,
+              press: () => Navigator.pushNamed(context, CartScreen.routeName),
+            ),
           ),
         ],
       ),

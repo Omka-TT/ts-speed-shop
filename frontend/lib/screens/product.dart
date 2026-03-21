@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../constants.dart';
 import '../models/Product.dart';
 import 'package:provider/provider.dart';
+import '../providers/cart_provider.dart';
 import '../providers/favorites_provider.dart';
 
 class ProductPage extends StatefulWidget {
@@ -226,9 +227,22 @@ class _ProductPageState extends State<ProductPage> {
                         ),
                         elevation: 6,
                       ),
-                      onPressed: () {
-                        // Add to cart action — for now navigate back as placeholder
-                        Navigator.pop(context);
+                      onPressed: () async {
+                        try {
+                          final cartProvider = context.read<CartProvider>();
+                          await cartProvider.addToCart(widget.product);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text("Added to cart successfully"),
+                            ),
+                          );
+                        } catch (e) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text("Failed to add to cart: $e"),
+                            ),
+                          );
+                        }
                       },
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
