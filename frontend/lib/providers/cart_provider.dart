@@ -28,10 +28,10 @@ class CartProvider extends ChangeNotifier {
     }
   }
 
-  Future<void> addToCart(Product product) async {
+  Future<void> addToCart(Product product, {int quantity = 1}) async {
     try {
-      await CartService.instance.addToCart(product.id);
-      print('[CartProvider] added product ${product.id} to cart');
+      await CartService.instance.addToCart(product.id, quantity: quantity);
+      print('[CartProvider] added product ${product.id} to cart with quantity $quantity');
       // Refetch to get updated cart
       await fetchCartItems();
     } catch (e) {
@@ -53,5 +53,47 @@ class CartProvider extends ChangeNotifier {
     }
   }
 
+  Future<void> increaseQuantity(int cartItemId) async {
+    try {
+      final item = _cartItems.firstWhere((item) => item['id'] == cartItemId);
+      final newQuantity = (item['quantity'] ?? 1) + 1;
+      await CartService.instance.updateCartItem(cartItemId, newQuantity);
+      print('[CartProvider] increased quantity of cart item $cartItemId to $newQuantity');
+      // Refetch to get updated cart
+      await fetchCartItems();
+    } catch (e) {
+      print('Error increasing quantity: $e');
+      rethrow;
+    }
+  }
+
+  Future<void> decreaseQuantity(int cartItemId) async {
+    try {
+      final item = _cartItems.firstWhere((item) => item['id'] == cartItemId);
+      final currentQuantity = item['quantity'] ?? 1;
+      if (currentQuantity <= 1) {
+        // Remove item if quantity would be 0
+        await removeFromCart(cartItemId);
+      } else {
+        final newQuantity = currentQuantity - 1;
+        await CartService.instance.updateCartItem(cartItemId, newQuantity);
+        print('[CartProvider] decreased quantity of cart item $cartItemId to $newQuantity');
+        // Refetch to get updated cart
+        await fetchCartItems();
+      }
+    } catch (e) {
+      print('Error decreasing quantity: $e');
+      rethrow;
+    }
+  }
+
   bool isInCart(Product product) => _cartItems.any((item) => item['product']['id'] == product.id);
+
+  /// Clear all cart data (used on logout)
+  void clear() {
+    _cartItems = [];
+    isLoading = false;
+    print('[CartProvider] cart cleared');
+    notifyListeners();
+  }
 }

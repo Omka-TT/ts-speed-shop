@@ -4,6 +4,7 @@ import 'package:ts_speed_shop/constants.dart';
 import 'package:ts_speed_shop/screens/favorite/favorite_screen.dart';
 import 'package:ts_speed_shop/screens/home/home_screen.dart';
 import 'package:ts_speed_shop/screens/profile/profile_screen.dart';
+import 'package:ts_speed_shop/screens/order/order_page.dart';
 
 const Color inActiveIconColor = Color(0xFFB6B6B6);
 
@@ -13,10 +14,10 @@ class InitScreen extends StatefulWidget {
   static String routeName = "/";
 
   @override
-  State<InitScreen> createState() => _InitScreenState();
+  State<InitScreen> createState() => InitScreenState();
 }
 
-class _InitScreenState extends State<InitScreen> {
+class InitScreenState extends State<InitScreen> {
   int currentSelectedIndex = 0;
 
   void updateCurrentIndex(int index) {
@@ -28,16 +29,26 @@ class _InitScreenState extends State<InitScreen> {
   final pages = [
     const HomeScreen(),
     const FavoriteScreen(),
-    const Center(
-      child: Text("Chat"),
-    ),
+    const OrderPage(),
     const ProfileScreen()
   ];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: pages[currentSelectedIndex],
+      body: AnimatedSwitcher(
+        duration: const Duration(milliseconds: 300),
+        transitionBuilder: (Widget child, Animation<double> animation) {
+          return FadeTransition(
+            opacity: animation,
+            child: child,
+          );
+        },
+        child: KeyedSubtree(
+          key: ValueKey<int>(currentSelectedIndex),
+          child: pages[currentSelectedIndex],
+        ),
+      ),
       bottomNavigationBar: BottomNavigationBar(
         onTap: updateCurrentIndex,
         currentIndex: currentSelectedIndex,
@@ -81,20 +92,20 @@ class _InitScreenState extends State<InitScreen> {
           ),
           BottomNavigationBarItem(
             icon: SvgPicture.asset(
-              "assets/icons/Chat bubble Icon.svg",
+              "assets/icons/Bill Icon.svg",
               colorFilter: const ColorFilter.mode(
                 inActiveIconColor,
                 BlendMode.srcIn,
               ),
             ),
             activeIcon: SvgPicture.asset(
-              "assets/icons/Chat bubble Icon.svg",
+              "assets/icons/Bill Icon.svg",
               colorFilter: const ColorFilter.mode(
                 kPrimaryColor,
                 BlendMode.srcIn,
               ),
             ),
-            label: "Chat",
+            label: "Orders",
           ),
           BottomNavigationBarItem(
             icon: SvgPicture.asset(

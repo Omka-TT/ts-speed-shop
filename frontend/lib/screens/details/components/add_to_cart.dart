@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../models/Product.dart';
 import '../../../providers/cart_provider.dart';
+import '../../../providers/notification_provider.dart';
 
 class AddToCart extends StatefulWidget {
   final Product product;
@@ -35,32 +36,25 @@ class _AddToCartState extends State<AddToCart> {
   void addToCart() async {
     try {
       final cartProvider = context.read<CartProvider>();
-      for (int i = 0; i < quantity; i++) {
-        await cartProvider.addToCart(widget.product);
-      }
+      await cartProvider.addToCart(widget.product, quantity: quantity);
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Row(
-            children: [
-              const Icon(Icons.check_circle, color: Colors.white),
-              const SizedBox(width: 12),
-              const Expanded(
-                child: Text("Added to cart successfully"),
-              ),
-            ],
-          ),
-          backgroundColor: Colors.green,
-          duration: const Duration(seconds: 3),
-        ),
-      );
+      // Show success notification (TOP)
+      if (mounted) {
+        context.read<NotificationProvider>().addNotification(
+          title: 'Added to Cart',
+          message: 'Added $quantity ${quantity == 1 ? 'item' : 'items'} to cart successfully',
+          id: 'cart_${DateTime.now().millisecondsSinceEpoch}',
+        );
+      }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text("Failed to add to cart: $e"),
-          backgroundColor: Colors.red,
-        ),
-      );
+      // Show error notification (TOP)
+      if (mounted) {
+        context.read<NotificationProvider>().addNotification(
+          title: 'Cart Error',
+          message: 'Could not add to cart. Please try again.',
+          id: 'error_${DateTime.now().millisecondsSinceEpoch}',
+        );
+      }
     }
   }
 

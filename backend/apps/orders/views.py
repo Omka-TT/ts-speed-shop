@@ -44,12 +44,24 @@ class OrderListCreateView(generics.ListCreateAPIView):
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
-class OrderDetailView(generics.RetrieveAPIView):
+class OrderDetailView(generics.RetrieveDestroyAPIView):
     permission_classes = [permissions.IsAuthenticated]
     serializer_class = OrderSerializer
 
     def get_queryset(self):
         return Order.objects.filter(user=self.request.user)
+
+
+class PurchaseHistoryView(generics.ListAPIView):
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = OrderSerializer
+
+    def get_queryset(self):
+        # Return only completed/paid orders for purchase history
+        return Order.objects.filter(
+            user=self.request.user,
+            status__in=['paid', 'completed']
+        ).order_by('-created_at')
 
 
 

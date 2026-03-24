@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'package:dio/dio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -46,7 +47,9 @@ class AuthService {
     if (!_initialized) await init();
 
     final trimmed = _token?.trim();
-    return (trimmed == null || trimmed.isEmpty) ? null : trimmed;
+    final hasToken = (trimmed == null || trimmed.isEmpty) ? null : trimmed;
+    print('[AuthService] getToken() returning: ${hasToken != null ? '***${hasToken.substring(max(0, hasToken.length - 4))}' : 'null'}');
+    return hasToken;
   }
 
   /// Saves a token to persistent storage and updates the in-memory cache.

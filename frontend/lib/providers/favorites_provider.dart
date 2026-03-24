@@ -52,4 +52,12 @@ class FavoritesProvider extends ChangeNotifier {
   }
 
   bool isFavorite(Product product) => favorites.any((f) => f.id == product.id);
+
+  /// Clear all favorites data (used on logout)
+  void clear() {
+    _favoritesData = [];
+    isLoading = false;
+    print('[FavoritesProvider] favorites cleared');
+    notifyListeners();
+  }
 }

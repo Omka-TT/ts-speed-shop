@@ -56,7 +56,7 @@ class Payment(models.Model):
         default="USD"
     )
 
-    status = models.CharField(
+    payment_status = models.CharField(
         max_length=20,
         choices=STATUS_CHOICES,
         default=STATUS_PENDING

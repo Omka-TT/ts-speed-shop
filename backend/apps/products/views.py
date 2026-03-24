@@ -9,6 +9,9 @@ class ProductListView(generics.ListAPIView):
 
     def get_queryset(self):
         queryset = Product.objects.all()
+        category = self.request.query_params.get("category")
+        if category:
+            queryset = queryset.filter(category__name=category)
         product_type = self.request.query_params.get("type")
         if product_type in [Product.TYPE_PRODUCT, Product.TYPE_COURSE]:
             queryset = queryset.filter(type=product_type)

@@ -51,7 +51,7 @@ class Product {
   static String getImageByProductId(int id) {
     const defaultImages = [
       'assets/images/capcut-logo.jpg',
-      'assets/images/Adobe_After_Effects_logo.png',
+      'assets/images/capcut-logo.jpg',
       'assets/images/filmora_logo.png',
     ];
 

@@ -1,5 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:ts_speed_shop/screens/init_screen.dart';
+import '../../providers/profile_provider.dart';
+import '../../providers/cart_provider.dart';
+import '../../providers/favorites_provider.dart';
+import '../../providers/order_provider.dart';
 
 class LoginSuccessScreen extends StatefulWidget {
   static String routeName = "/login_success";
@@ -48,7 +53,31 @@ class _LoginSuccessScreenState extends State<LoginSuccessScreen>
     super.dispose();
   }
 
-  void _backToHome() {
+  void _backToHome() async {
+    // Initialize providers with fresh data after login/register
+    try {
+      final profileProvider = context.read<ProfileProvider>();
+      final cartProvider = context.read<CartProvider>();
+      final favoritesProvider = context.read<FavoritesProvider>();
+      final orderProvider = context.read<OrderProvider>();
+
+      // Reset profile fetch flag and fetch fresh profile
+      profileProvider.resetFetchFlag();
+      await profileProvider.fetchProfile();
+
+      // Fetch user's cart, favorites, and orders
+      await cartProvider.fetchCartItems();
+      await favoritesProvider.fetchFavorites();
+      await orderProvider.fetchOrders();
+
+      print('[LoginSuccessScreen] Providers initialized with fresh user data');
+    } catch (e) {
+      print('[LoginSuccessScreen] Error initializing providers: $e');
+      // Continue to home even if provider init fails
+    }
+
+    if (!mounted) return;
+
     Navigator.pushNamedAndRemoveUntil(
       context,
       InitScreen.routeName,

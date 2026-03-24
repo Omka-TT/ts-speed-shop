@@ -1,6 +1,6 @@
 from django.db import IntegrityError
 
-from rest_framework import generics, serializers
+from rest_framework import generics, serializers, permissions
 
 from .models import Favorite
 from .serializers import FavoriteSerializer
@@ -8,6 +8,7 @@ from .serializers import FavoriteSerializer
 
 class FavoriteListCreateView(generics.ListCreateAPIView):
     serializer_class = FavoriteSerializer
+    permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
         return Favorite.objects.filter(user=self.request.user)
@@ -21,6 +22,7 @@ class FavoriteListCreateView(generics.ListCreateAPIView):
 
 class FavoriteDeleteView(generics.DestroyAPIView):
     serializer_class = FavoriteSerializer
+    permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
         return Favorite.objects.filter(user=self.request.user)

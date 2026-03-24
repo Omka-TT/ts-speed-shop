@@ -4,11 +4,11 @@ import 'package:provider/provider.dart';
 import '../../providers/cart_provider.dart';
 import '../../providers/favorites_provider.dart';
 import '../../providers/product_provider.dart';
-import 'components/categories.dart';
-import 'components/discount_banner.dart';
+import 'components/home_greeting_banner.dart';
 import 'components/home_header.dart';
 import 'components/popular_product.dart';
 import 'components/special_offers.dart';
+import 'components/home_dashboard_widgets.dart';
 
 class HomeScreen extends StatefulWidget {
   static String routeName = "/home";
@@ -40,8 +40,8 @@ class _HomeScreenState extends State<HomeScreen> {
           child: Column(
             children: [
               HomeHeader(),
-              DiscountBanner(),
-              Categories(),
+              HomeGreetingBanner(),
+              HomeDashboardWidgets(),
               SpecialOffers(),
               SizedBox(height: 20),
               PopularProducts(),

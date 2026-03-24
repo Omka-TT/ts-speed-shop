@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import '../../../constants.dart';
 import '../../../helper/keyboard.dart';
+import '../../../components/top_notification_widget.dart';
+import '../../../models/Notification.dart';
 import '../../login_success/login_success_screen.dart';
-import '../../../services/register_service.dart';
+import '../../../providers/auth_provider.dart';
+
 
 class SignUpForm extends StatefulWidget {
   const SignUpForm({super.key});
@@ -133,7 +137,8 @@ class _SignUpFormState extends State<SignUpForm>
     setState(() => _isLoading = true);
 
     try {
-      final result = await RegisterService().register(
+      final authProvider = context.read<AuthProvider>();
+      final success = await authProvider.register(
         _usernameController.text.trim(),
         _emailController.text.trim(),
         _passwordController.text,
@@ -141,46 +146,17 @@ class _SignUpFormState extends State<SignUpForm>
 
       setState(() => _isLoading = false);
 
-      if (result['success'] == true) {
+      if (success) {
         _showSuccessDialog();
         return;
       }
 
-      final message = result['message']?.toString() ?? 'Registration failed';
-      final fieldErrors = result['fieldErrors'] as Map<String, dynamic>?;
-      final userExists = result['userExists'] == true;
-
-      if (userExists) {
-        _usernameError = fieldErrors?['username']?.toString() ??
-            'Username already taken';
-        _emailError =
-            fieldErrors?['email']?.toString() ?? 'Email already registered';
-
-        setState(() {});
-
-        _showSnackBar(
-          'You are already registered. Please login instead.',
-          actionLabel: 'Login',
-          action: () => Navigator.pushNamed(context, '/sign_in'),
-        );
-        return;
-      }
-
-      if (fieldErrors != null && fieldErrors.isNotEmpty) {
-        _usernameError = fieldErrors['username']?.toString();
-        _emailError = fieldErrors['email']?.toString();
-        _passwordError = fieldErrors['password']?.toString();
-      } else {
-        _usernameError = message;
-        _emailError = message;
-        _passwordError = message;
-      }
-
-      setState(() {});
-      _showSnackBar(message);
+      // If registration failed, show error
+      final message = 'Registration failed. Please try again.';
+      _showErrorNotification(message);
     } catch (_) {
       setState(() => _isLoading = false);
-      _showSnackBar('Registration failed. Please try again.');
+      _showErrorNotification('Registration failed. Please try again.');
     }
   }
 
@@ -204,33 +180,20 @@ class _SignUpFormState extends State<SignUpForm>
     );
   }
 
-  void _showSnackBar(
-    String message, {
-    String? actionLabel,
-    VoidCallback? action,
-  }) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          children: [
-            const Icon(Icons.error_outline, color: Colors.white),
-            const SizedBox(width: 10),
-            Expanded(child: Text(message)),
-          ],
-        ),
-        behavior: SnackBarBehavior.floating,
-        backgroundColor: Colors.red.shade500,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        margin: const EdgeInsets.all(16),
-        duration: const Duration(seconds: 4),
-        action: actionLabel != null && action != null
-            ? SnackBarAction(
-                label: actionLabel,
-                textColor: Colors.white,
-                onPressed: action,
-              )
-            : null,
-      ),
+  void _showErrorNotification(String message) {
+    if (!mounted) return;
+    
+    final errorNotification = NotificationModel(
+      id: 'signup_error_${DateTime.now().millisecondsSinceEpoch}',
+      title: 'Registration Error',
+      message: message,
+      createdAt: DateTime.now(),
+    );
+    
+    TopNotificationOverlay.show(
+      context,
+      errorNotification,
+      displayDuration: const Duration(seconds: 3),
     );
   }
 

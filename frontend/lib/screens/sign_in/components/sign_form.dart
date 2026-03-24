@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import '../../../constants.dart';
 import '../../../helper/keyboard.dart';
+import '../../../components/top_notification_widget.dart';
+import '../../../models/Notification.dart';
 import '../../login_success/login_success_screen.dart';
-import '../../../services/auth_service.dart';
+import '../../../providers/auth_provider.dart';
 
 class SignForm extends StatefulWidget {
   const SignForm({super.key});
@@ -109,7 +112,8 @@ class _SignFormState extends State<SignForm>
     setState(() => _isLoading = true);
 
     try {
-      final result = await AuthService.instance.login(
+      final authProvider = context.read<AuthProvider>();
+      final success = await authProvider.login(
         _usernameController.text.trim(),
         _emailController.text.trim(),
         _passwordController.text,
@@ -118,76 +122,33 @@ class _SignFormState extends State<SignForm>
       if (!mounted) return;
       setState(() => _isLoading = false);
 
-      if (result['success'] == true) {
+      if (success) {
         _showSuccessDialog();
         return;
       }
 
-      final message = result['message']?.toString() ?? 'Login failed';
-      final fieldError = result['fieldError']?.toString();
-      final statusCode = result['statusCode'] as int?;
-
-      if (statusCode == 404 ||
-          message.toLowerCase().contains('not registered') ||
-          fieldError == 'user_not_found') {
-        _usernameError = 'User not registered';
-        _emailError = 'Email not registered';
-
-        setState(() {});
-
-        _showSnackBar(
-          'You are not registered. Please sign up first.',
-          actionLabel: 'Sign Up',
-          action: () => Navigator.pushNamed(context, '/sign_up'),
-        );
-        return;
-      }
-
-      if (fieldError == 'password' || message.toLowerCase().contains('password')) {
-        _passwordError = 'Incorrect password';
-      } else if (fieldError == 'username' ||
-          message.toLowerCase().contains('username')) {
-        _usernameError = 'Invalid username';
-      } else if (fieldError == 'email' ||
-          message.toLowerCase().contains('email')) {
-        _emailError = 'Invalid email';
-      }
-
-      setState(() {});
-      _showSnackBar(message);
+      // If login failed, show generic error
+      _showErrorNotification('Login failed. Please check your credentials.');
     } catch (_) {
       setState(() => _isLoading = false);
-      _showSnackBar('Login failed. Please try again.');
+      _showErrorNotification('Login failed. Please try again.');
     }
   }
 
-  void _showSnackBar(
-    String message, {
-    String? actionLabel,
-    VoidCallback? action,
-  }) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          children: [
-            const Icon(Icons.error_outline, color: Colors.white),
-            const SizedBox(width: 10),
-            Expanded(child: Text(message)),
-          ],
-        ),
-        behavior: SnackBarBehavior.floating,
-        backgroundColor: Colors.red.shade500,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        margin: const EdgeInsets.all(16),
-        duration: const Duration(seconds: 4),
-        action: actionLabel != null && action != null
-            ? SnackBarAction(
-                label: actionLabel,
-                textColor: Colors.white,
-                onPressed: action,
-              )
-            : null,
-      ),
+  void _showErrorNotification(String message) {
+    if (!mounted) return;
+    
+    final errorNotification = NotificationModel(
+      id: 'signin_error_${DateTime.now().millisecondsSinceEpoch}',
+      title: 'Login Error',
+      message: message,
+      createdAt: DateTime.now(),
+    );
+    
+    TopNotificationOverlay.show(
+      context,
+      errorNotification,
+      displayDuration: const Duration(seconds: 3),
     );
   }
 

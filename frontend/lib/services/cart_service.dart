@@ -32,22 +32,41 @@ class CartService {
     }
   }
 
-  /// Adds a product to the user's cart.
-  Future<void> addToCart(int productId) async {
+  /// Adds a product to the user's cart with specified quantity.
+  Future<void> addToCart(int productId, {int quantity = 1}) async {
     try {
-      print('[CartService] sending request body: {"product_id": $productId}');
+      print('[CartService] sending request body: {"product_id": $productId, "quantity": $quantity}');
       final response = await DioClient.instance.post(
         '/cart/',
-        data: {'product_id': productId},
+        data: {'product_id': productId, 'quantity': quantity},
       );
       if (response.statusCode == 201) {
-        print('[CartService] added product $productId to cart');
+        print('[CartService] added product $productId to cart with quantity $quantity');
       } else {
         throw Exception('Failed to add to cart: ${response.statusCode}');
       }
     } on DioException catch (e) {
       print('[CartService] error adding to cart: $e');
       throw Exception('Network error while adding to cart');
+    }
+  }
+
+  /// Updates the quantity of a cart item.
+  Future<void> updateCartItem(int cartItemId, int quantity) async {
+    try {
+      print('[CartService] updating cart item $cartItemId with quantity: $quantity');
+      final response = await DioClient.instance.patch(  // Use PATCH for partial update
+        '/cart/$cartItemId/',
+        data: {'quantity': quantity},
+      );
+      if (response.statusCode == 200) {
+        print('[CartService] updated cart item $cartItemId to quantity $quantity');
+      } else {
+        throw Exception('Failed to update cart item: ${response.statusCode}');
+      }
+    } on DioException catch (e) {
+      print('[CartService] error updating cart item: $e');
+      throw Exception('Network error while updating cart item');
     }
   }
 

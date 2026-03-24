@@ -10,13 +10,13 @@ class PaymentAdmin(admin.ModelAdmin):
         "user",
         "amount",
         "currency",
-        "status",
+        "payment_status",
         "created_at",
         "confirmed_at"
     )
 
     list_filter = (
-        "status",
+        "payment_status",
         "created_at"
     )
 

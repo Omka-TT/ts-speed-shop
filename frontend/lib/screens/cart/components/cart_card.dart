@@ -17,35 +17,34 @@ class CartCard extends StatefulWidget {
   State<CartCard> createState() => _CartCardState();
 }
 
-class _CartCardState extends State<CartCard> with SingleTickerProviderStateMixin {
-  late AnimationController _animationController;
-  late Animation<double> _scaleAnimation;
+class _CartCardState extends State<CartCard> with TickerProviderStateMixin {
+  bool _isDecreasePressed = false;
+  bool _isIncreasePressed = false;
 
-  @override
-  void initState() {
-    super.initState();
-    _animationController = AnimationController(
-      duration: const Duration(milliseconds: 500),
-      vsync: this,
-    );
-    _scaleAnimation = Tween<double>(begin: 1.0, end: 1.05).animate(
-      CurvedAnimation(parent: _animationController, curve: Curves.elasticOut),
-    );
+  void _onDecreaseTapDown() {
+    setState(() => _isDecreasePressed = true);
   }
 
-  @override
-  void dispose() {
-    _animationController.dispose();
-    super.dispose();
+  void _onDecreaseTapUp() {
+    setState(() => _isDecreasePressed = false);
+  }
+
+  void _onIncreaseTapDown() {
+    setState(() => _isIncreasePressed = true);
+  }
+
+  void _onIncreaseTapUp() {
+    setState(() => _isIncreasePressed = false);
   }
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 300),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(15),
+        borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
             offset: const Offset(0, 4),
@@ -80,7 +79,7 @@ class _CartCardState extends State<CartCard> with SingleTickerProviderStateMixin
                   style: const TextStyle(
                     color: Colors.black,
                     fontSize: 16,
-                    fontWeight: FontWeight.w600,
+                    fontWeight: FontWeight.bold,
                   ),
                   maxLines: 2,
                 ),
@@ -89,20 +88,110 @@ class _CartCardState extends State<CartCard> with SingleTickerProviderStateMixin
                   "\$${(widget.cart.product.price * widget.cart.numOfItem).toStringAsFixed(2)}",
                   style: const TextStyle(
                     fontWeight: FontWeight.w600,
-                    fontSize: 15,
-                    color: kPrimaryColor,
+                    fontSize: 16,
+                    color: Color(0xFFFF7643),
                   ),
                 ),
                 const SizedBox(height: 8),
                 Row(
                   children: [
-                    ScaleTransition(
-                      scale: _scaleAnimation,
+                    // Decrease button
+                    GestureDetector(
+                      onTapDown: (_) => _onDecreaseTapDown(),
+                      onTapUp: (_) => _onDecreaseTapUp(),
+                      onTapCancel: () => _onDecreaseTapUp(),
+                      child: AnimatedScale(
+                        scale: _isDecreasePressed ? 0.9 : 1.0,
+                        duration: const Duration(milliseconds: 100),
+                        child: Container(
+                          width: 36,
+                          height: 36,
+                          decoration: BoxDecoration(
+                            color: Colors.grey[200],
+                            shape: BoxShape.circle,
+                            boxShadow: [
+                              BoxShadow(
+                                offset: const Offset(0, 2),
+                                blurRadius: 4,
+                                color: Colors.black.withOpacity(0.1),
+                              ),
+                            ],
+                          ),
+                          child: IconButton(
+                            onPressed: () async {
+                              final cartProvider = context.read<CartProvider>();
+                              final cartItemId = cartProvider.cartItems
+                                  .firstWhere(
+                                    (item) => item['product']['id'] == widget.cart.product.id,
+                                    orElse: () => {'id': null},
+                                  )['id'];
+                              if (cartItemId != null) {
+                                await cartProvider.decreaseQuantity(cartItemId);
+                              }
+                            },
+                            icon: const Icon(Icons.remove, size: 16),
+                            padding: EdgeInsets.zero,
+                            splashRadius: 18,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    // Quantity display with animation
+                    AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 200),
+                      transitionBuilder: (Widget child, Animation<double> animation) {
+                        return ScaleTransition(scale: animation, child: child);
+                      },
                       child: Text(
-                        "Qty: ${widget.cart.numOfItem}",
+                        "x${widget.cart.numOfItem}",
+                        key: ValueKey<int>(widget.cart.numOfItem),
                         style: const TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.black87,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    // Increase button
+                    GestureDetector(
+                      onTapDown: (_) => _onIncreaseTapDown(),
+                      onTapUp: (_) => _onIncreaseTapUp(),
+                      onTapCancel: () => _onIncreaseTapUp(),
+                      child: AnimatedScale(
+                        scale: _isIncreasePressed ? 0.9 : 1.0,
+                        duration: const Duration(milliseconds: 100),
+                        child: Container(
+                          width: 36,
+                          height: 36,
+                          decoration: BoxDecoration(
+                            color: Colors.grey[200],
+                            shape: BoxShape.circle,
+                            boxShadow: [
+                              BoxShadow(
+                                offset: const Offset(0, 2),
+                                blurRadius: 4,
+                                color: Colors.black.withOpacity(0.1),
+                              ),
+                            ],
+                          ),
+                          child: IconButton(
+                            onPressed: () async {
+                              final cartProvider = context.read<CartProvider>();
+                              final cartItemId = cartProvider.cartItems
+                                  .firstWhere(
+                                    (item) => item['product']['id'] == widget.cart.product.id,
+                                    orElse: () => {'id': null},
+                                  )['id'];
+                              if (cartItemId != null) {
+                                await cartProvider.increaseQuantity(cartItemId);
+                              }
+                            },
+                            icon: const Icon(Icons.add, size: 16),
+                            padding: EdgeInsets.zero,
+                            splashRadius: 18,
+                          ),
                         ),
                       ),
                     ),

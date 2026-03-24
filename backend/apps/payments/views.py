@@ -1,4 +1,5 @@
 from django.db import transaction
+from django.utils import timezone
 
 from rest_framework import generics, permissions, status
 from rest_framework.exceptions import ValidationError
@@ -41,7 +42,7 @@ class PaymentListCreateView(generics.ListCreateAPIView):
                 order=order,
                 amount=order.total_price,
                 payment_method=payment_method,
-                status=Payment.STATUS_COMPLETED,
+                payment_status=Payment.STATUS_COMPLETED,
             )
 
             order.status = Order.STATUS_PAID
@@ -69,7 +70,7 @@ class UploadPaymentScreenshotView(APIView):
             )
 
         payment.screenshot = screenshot
-        payment.status = Payment.STATUS_PENDING
+        payment.payment_status = Payment.STATUS_PENDING
         payment.save()
 
         return Response(
@@ -90,12 +91,12 @@ class MyPaymentsView(APIView):
 
 
 class ConfirmPaymentView(APIView):
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAdminUser]
 
     def post(self, request, payment_id):
         payment = get_object_or_404(Payment, id=payment_id)
 
-        payment.status = Payment.STATUS_COMPLETED
+        payment.payment_status = Payment.STATUS_COMPLETED
         payment.confirmed_at = timezone.now()
         payment.save()
 

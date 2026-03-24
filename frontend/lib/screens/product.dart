@@ -5,6 +5,7 @@ import '../models/Product.dart';
 import 'package:provider/provider.dart';
 import '../providers/cart_provider.dart';
 import '../providers/favorites_provider.dart';
+import '../providers/notification_provider.dart';
 
 class ProductPage extends StatefulWidget {
   const ProductPage({
@@ -231,17 +232,23 @@ class _ProductPageState extends State<ProductPage> {
                         try {
                           final cartProvider = context.read<CartProvider>();
                           await cartProvider.addToCart(widget.product);
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text("Added to cart successfully"),
-                            ),
-                          );
+                          // Show success notification (TOP)
+                          if (mounted) {
+                            context.read<NotificationProvider>().addNotification(
+                              title: 'Added to Cart',
+                              message: 'Product added to cart successfully',
+                              id: 'cart_${DateTime.now().millisecondsSinceEpoch}',
+                            );
+                          }
                         } catch (e) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text("Failed to add to cart: $e"),
-                            ),
-                          );
+                          // Show error notification (TOP)
+                          if (mounted) {
+                            context.read<NotificationProvider>().addNotification(
+                              title: 'Cart Error',
+                              message: 'Could not add to cart. Please try again.',
+                              id: 'error_${DateTime.now().millisecondsSinceEpoch}',
+                            );
+                          }
                         }
                       },
                       child: Row(

@@ -19,10 +19,12 @@ class DioClient {
 
           if (token != null && token.isNotEmpty) {
             options.headers['Authorization'] = 'Token $token';
+            print('[DioClient] Added auth header for request: ${options.method} ${options.uri}');
           } else {
             // For endpoints that require authentication, bail out early.
             final requiresAuth = options.extra['requiresAuth'] ?? true;
             if (requiresAuth) {
+              print('[DioClient] No token available for authenticated request: ${options.method} ${options.uri}');
               handler.reject(
                 DioException(
                   requestOptions: options,
@@ -31,6 +33,8 @@ class DioClient {
                 ),
               );
               return;
+            } else {
+              print('[DioClient] No auth header needed for request: ${options.method} ${options.uri}');
             }
           }
 

@@ -33,7 +33,7 @@ class ProductService {
     try {
       final response = await DioClient.instance.get(
         '/products/',
-        options: Options(extra: {'requiresAuth': true}),
+        options: Options(extra: {'requiresAuth': false}),
       );
 
       if (response.statusCode == 200) {

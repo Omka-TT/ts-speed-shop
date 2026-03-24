@@ -17,12 +17,12 @@ class PaymentSerializer(serializers.ModelSerializer):
             "order",
             "amount",
             "payment_method",
-            "status",
+            "payment_status",
             "created_at",
         ]
         read_only_fields = [
             "id",
-            "status",
+            "payment_status",
             "created_at",
         ]
 

@@ -74,6 +74,7 @@ class _CartScreenState extends State<CartScreen> {
                       return Padding(
                         padding: const EdgeInsets.symmetric(vertical: 8),
                         child: CartCard(
+                          key: ValueKey(cartItem['id']),
                           cart: Cart(product: product, numOfItem: quantity),
                         ),
                       );
