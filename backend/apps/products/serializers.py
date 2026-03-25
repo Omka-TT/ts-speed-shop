@@ -8,6 +8,8 @@ class ProductSerializer(serializers.ModelSerializer):
             "id",
             "name",
             "price",
+            "description",
+            "image_url",
             "type",
             "category",
             "available",

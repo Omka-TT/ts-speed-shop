@@ -154,44 +154,7 @@ class _ProductPageState extends State<ProductPage> {
                   ),
                   const SizedBox(height: 20),
 
-                  // Detailed information (expandable)
-                  Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(14),
-                      border: Border.all(color: Colors.grey.shade200),
-                    ),
-                    child: Column(
-                      children: [
-                        InkWell(
-                          borderRadius: BorderRadius.circular(14),
-                          onTap: () => setState(() => _expanded = !_expanded),
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 16, vertical: 14),
-                            child: Row(
-                              children: [
-                                Expanded(
-                                  child: Text(
-                                    'Detailed information',
-                                    style: theme.textTheme.titleMedium?.copyWith(
-                                      fontWeight: FontWeight.w700,
-                                    ),
-                                  ),
-                                ),
-                                AnimatedRotation(
-                                  turns: _expanded ? 0.5 : 0.0,
-                                  duration: const Duration(milliseconds: 200),
-                                  child: Icon(
-                                    _expanded ? Icons.expand_less : Icons.expand_more,
-                                    size: 22,
-                                    color: Colors.black54,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
+                  
                         AnimatedCrossFade(
                           firstChild: const SizedBox.shrink(),
                           secondChild: Padding(
@@ -273,9 +236,6 @@ class _ProductPageState extends State<ProductPage> {
                 ],
               ),
             ),
-          ],
-        ),
-      ),
     );
   }
 }

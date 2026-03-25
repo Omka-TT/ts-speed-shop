@@ -18,6 +18,8 @@ class Product(models.Model):
 
     name = models.CharField(max_length=100)
     price = models.DecimalField(max_digits=10, decimal_places=2)
+    description = models.TextField(blank=True, default='')
+    image_url = models.CharField(max_length=255, blank=True, default='')
     type = models.CharField(max_length=20, choices=TYPE_CHOICES, default=TYPE_PRODUCT)
     category = models.ForeignKey(Category, on_delete=models.CASCADE)
     available = models.BooleanField(default=True)

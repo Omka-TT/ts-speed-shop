@@ -81,7 +81,7 @@ class _PaymentPageState extends State<PaymentPage>
   bool get _isFormValid {
     // For cash payments, no validation needed
     if (_selectedMethod == 'cash') return true;
-    
+
     final cardNumber = _cardNumberController.text.replaceAll(' ', '');
     final cardHolder = _cardHolderController.text.trim();
     final expiry = _expiryController.text;
@@ -162,9 +162,13 @@ class _PaymentPageState extends State<PaymentPage>
       }
     } catch (error) {
       if (mounted) {
+        final message = error is Exception
+            ? error.toString().replaceFirst('Exception: ', '')
+            : 'Payment could not be processed. Please try again.';
+
         await NotificationService.showError(
           context,
-          'Payment could not be processed. Please try again.',
+          message,
           title: 'Payment Failed',
           displayDuration: const Duration(seconds: 3),
         );
@@ -184,7 +188,7 @@ class _PaymentPageState extends State<PaymentPage>
       // Pop until we find the orders route or reach the home screen
       return route.settings.name == '/order' || route.isFirst;
     });
-    
+
     // If we're not on orders page, try to navigate to it
     if (ModalRoute.of(context)?.settings.name != '/order') {
       Navigator.of(context).pushNamed('/order');
@@ -354,156 +358,16 @@ class _PaymentPageState extends State<PaymentPage>
               const Text('Payment Method',
                   style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
               const SizedBox(height: 12),
-              _paymentMethodOption(
-                  'card', 'Card (Visa/Mastercard)', Icons.credit_card),
               _paymentMethodOption('cash', 'Cash (Mock)', Icons.money),
               const SizedBox(height: 24),
-              
+
               // Only show card details for card payments
-              if (_selectedMethod == 'card') ...[
-                const Text('Card Details',
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+             
                 const SizedBox(height: 16),
               
-              // Card Number Input
-              TextField(
-                controller: _cardNumberController,
-                focusNode: _cardFocusNode,
-                keyboardType: TextInputType.number,
-                inputFormatters: [
-                  FilteringTextInputFormatter.digitsOnly,
-                  CardNumberInputFormatter(),
-                ],
-                decoration: InputDecoration(
-                  labelText: 'Card Number',
-                  hintText: '1234 5678 9012 3456',
-                  prefixIcon: const Icon(Icons.credit_card, size: 22),
-                  suffixIcon: _getCardBrandIcon() != null
-                      ? Padding(
-                          padding: const EdgeInsets.only(right: 12),
-                          child: Icon(_getCardBrandIcon(), 
-                              color: Colors.orange, size: 24),
-                        )
-                      : null,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(16),
-                    borderSide: BorderSide(color: Colors.grey.shade300),
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(16),
-                    borderSide: BorderSide(color: Colors.grey.shade300, width: 1),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(16),
-                    borderSide: const BorderSide(color: Colors.orange, width: 2),
-                  ),
-                  filled: true,
-                  fillColor: Colors.grey.shade50,
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                ),
-              ),
-              const SizedBox(height: 16),
 
-              // Card Holder Name Input
-              TextField(
-                controller: _cardHolderController,
-                focusNode: _cardHolderFocusNode,
-                keyboardType: TextInputType.name,
-                textCapitalization: TextCapitalization.words,
-                decoration: InputDecoration(
-                  labelText: 'Cardholder Name',
-                  hintText: 'John Doe',
-                  prefixIcon: const Icon(Icons.person, size: 22),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(16),
-                    borderSide: BorderSide(color: Colors.grey.shade300),
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(16),
-                    borderSide: BorderSide(color: Colors.grey.shade300, width: 1),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(16),
-                    borderSide: const BorderSide(color: Colors.orange, width: 2),
-                  ),
-                  filled: true,
-                  fillColor: Colors.grey.shade50,
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                ),
-              ),
-              const SizedBox(height: 16),
-
-              // Expiry & CVV Row
-              Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      controller: _expiryController,
-                      focusNode: _expiryFocusNode,
-                      keyboardType: TextInputType.number,
-                      inputFormatters: [
-                        FilteringTextInputFormatter.digitsOnly,
-                        ExpiryDateInputFormatter(),
-                      ],
-                      decoration: InputDecoration(
-                        labelText: 'Expiry Date',
-                        hintText: 'MM/YY',
-                        prefixIcon: const Icon(Icons.event, size: 22),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(16),
-                          borderSide: BorderSide(color: Colors.grey.shade300),
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(16),
-                          borderSide: BorderSide(color: Colors.grey.shade300, width: 1),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(16),
-                          borderSide: const BorderSide(color: Colors.orange, width: 2),
-                        ),
-                        filled: true,
-                        fillColor: Colors.grey.shade50,
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: TextField(
-                      controller: _cvvController,
-                      focusNode: _cvvFocusNode,
-                      keyboardType: TextInputType.number,
-                      inputFormatters: [
-                        FilteringTextInputFormatter.digitsOnly,
-                        CvvInputFormatter(),
-                      ],
-                      decoration: InputDecoration(
-                        labelText: 'CVV',
-                        hintText: '123',
-                        prefixIcon: const Icon(Icons.lock, size: 22),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(16),
-                          borderSide: BorderSide(color: Colors.grey.shade300),
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(16),
-                          borderSide: BorderSide(color: Colors.grey.shade300, width: 1),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(16),
-                          borderSide: const BorderSide(color: Colors.orange, width: 2),
-                        ),
-                        filled: true,
-                        fillColor: Colors.grey.shade50,
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                      ),
-                      obscureText: true,
-                    ),
-                  ),
-                ],
-              ),
               const SizedBox(height: 32),
-              
+
               // Pay Button with loading state
               AnimatedScale(
                 duration: const Duration(milliseconds: 200),
@@ -532,8 +396,9 @@ class _PaymentPageState extends State<PaymentPage>
                         elevation: 0,
                         disabledBackgroundColor: Colors.grey.shade300,
                       ),
-                      onPressed:
-                          (_isLoading || !_isFormValid) ? null : _confirmPayment,
+                      onPressed: (_isLoading || !_isFormValid)
+                          ? null
+                          : _confirmPayment,
                       child: _isLoading
                           ? Row(
                               mainAxisAlignment: MainAxisAlignment.center,
@@ -549,18 +414,19 @@ class _PaymentPageState extends State<PaymentPage>
                                 const SizedBox(width: 12),
                                 const Text('Processing Payment...',
                                     style: TextStyle(
-                                        fontSize: 16, fontWeight: FontWeight.w600)),
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w600)),
                               ],
                             )
-                          : Text('Pay \$${widget.order.totalPrice.toStringAsFixed(2)}',
+                          : Text(
+                              'Pay \$${widget.order.totalPrice.toStringAsFixed(2)}',
                               style: const TextStyle(
                                   fontSize: 18, fontWeight: FontWeight.bold)),
                     ),
                   ),
                 ),
               ),
-              ], // End of card details conditional
-              
+
               if (!_isFormValid)
                 Padding(
                   padding: const EdgeInsets.only(top: 16),
@@ -573,7 +439,8 @@ class _PaymentPageState extends State<PaymentPage>
                     ),
                     child: Row(
                       children: [
-                        Icon(Icons.error_outline, color: Colors.red.shade600, size: 20),
+                        Icon(Icons.error_outline,
+                            color: Colors.red.shade600, size: 20),
                         const SizedBox(width: 12),
                         Expanded(
                           child: Text(
