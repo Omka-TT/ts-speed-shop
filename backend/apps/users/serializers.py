@@ -10,6 +10,7 @@ class RegisterSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ("username", "email", "password")
+        ref_name = "CustomRegisterSerializer"
 
     def create(self, validated_data):
         return User.objects.create_user(**validated_data)
@@ -26,13 +27,13 @@ class ProfileSerializer(serializers.ModelSerializer):
     def to_internal_value(self, data):
         """Handle nested user data during deserialization."""
         ret = super().to_internal_value(data)
-        # Nest username and email under 'user' key for proper handling in update
+       
         if 'username' in ret or 'email' in ret:
             ret['user'] = {
                 'username': ret.pop('username', None),
                 'email': ret.pop('email', None),
             }
-            # Remove None values
+             
             ret['user'] = {k: v for k, v in ret['user'].items() if v is not None}
         return ret
 

@@ -1,4 +1,7 @@
+import os
+
 from pathlib import Path
+
 
 from corsheaders.defaults import default_headers
 
@@ -28,6 +31,7 @@ INSTALLED_APPS = [
     'apps.accounts',
     'apps.payments',
     'apps.favorites',
+    'drf_yasg',
 
     'rest_framework',
     'rest_framework.authtoken',
@@ -66,9 +70,13 @@ TEMPLATES = [
 WSGI_APPLICATION = "config.wsgi.application"
 
 DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'myshop_db',
+        'USER': 'postgres',
+        'PASSWORD': '0204$Aomka',
+        'HOST': 'localhost',
+        'PORT': '5432',
     }
 }
 
@@ -79,10 +87,9 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 STATIC_URL = '/static/'
 STATICFILES_DIRS = [
-    BASE_DIR / "static",  # если будешь хранить статику тут
+    BASE_DIR / "static",  
 ]
-STATIC_ROOT = BASE_DIR / "staticfiles"  # для production
-
+STATIC_ROOT = BASE_DIR / "staticfiles" 
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
         "rest_framework.authentication.TokenAuthentication",
@@ -131,7 +138,6 @@ MEDIA_ROOT = BASE_DIR / "media"
 CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOW_CREDENTIALS = True
 
-# Ensure the browser is allowed to send Authorization headers from Flutter Web.
 CORS_ALLOW_HEADERS = list(default_headers) + [
     "authorization",
     "Authorization",

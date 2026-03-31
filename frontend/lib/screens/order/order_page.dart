@@ -97,6 +97,20 @@ class _OrderPageState extends State<OrderPage> with TickerProviderStateMixin {
           style: TextStyle(color: Colors.black),
         ),
         automaticallyImplyLeading: false, // Remove back arrow
+        actions: [
+          IconButton(
+            onPressed: () {
+              Navigator.of(context).pushReplacementNamed('/');
+            },
+            icon: const Icon(
+              Icons.home,
+              color: Colors.black,
+              size: 28,
+            ),
+            tooltip: 'Go to Home',
+          ),
+          const SizedBox(width: 8),
+        ],
       ),
       body: Consumer<OrderProvider>(
         builder: (context, orderProvider, child) {
