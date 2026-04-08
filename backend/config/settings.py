@@ -11,9 +11,10 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = "django-insecure-1234567890"
 
-DEBUG = True
+DEBUG = os.environ.get('DEBUG', 'True') == 'True'
+ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '127.0.0.1,localhost,tsspeed29.pythonanywhere.com').split(',')
 
-ALLOWED_HOSTS = []
+CSRF_TRUSTED_ORIGINS = ['https://tsspeed29.pythonanywhere.com']
 
 INSTALLED_APPS = [
     'django.contrib.admin',
